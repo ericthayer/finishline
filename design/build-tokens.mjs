@@ -33,6 +33,14 @@ const plain = Object.entries(t)
 const families = Object.entries(t.type.families).map(([k, v]) => `  --font-${k}: ${v};`);
 
 const kebab = (s) => s.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+// Per-style custom properties so component CSS can use the fluid scale in `font:` shorthands.
+const textVars = t.type.groups.flatMap((g) =>
+  g.styles.flatMap((s) => [
+    `  --text-${s.name}-size: ${s.fontSize};`,
+    `  --text-${s.name}-leading: ${s.lineHeight};`,
+    `  --text-${s.name}-weight: ${s.fontWeight};`,
+  ]),
+);
 const styles = t.type.groups.flatMap((g) =>
   g.styles.map((s) => {
     const props = [`  font-family: var(--font-${s.family ?? g.family});`];
@@ -47,7 +55,7 @@ const css = [
   `/* ${t.name} — generated from tokens.json */`,
   block(`:root, [data-theme="${first}"]`, first),
   ...themes.slice(1).map((id) => block(`[data-theme="${id}"]`, id)),
-  `:root {\n${[...plain, ...families].join('\n')}\n}`,
+  `:root {\n${[...plain, ...families, ...textVars].join('\n')}\n}`,
   ...styles,
   '',
 ].join('\n\n');
