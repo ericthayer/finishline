@@ -1,10 +1,15 @@
 // Runs the real migration in an in-process Postgres (PGlite) with a minimal
 // stand-in for Supabase's auth schema, then checks RLS and lifecycle gates.
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 import { beforeAll, describe, expect, it } from 'vitest';
 
-const MIGRATION = readFileSync(new URL('../supabase/migrations/20261010000000_init.sql', import.meta.url), 'utf8');
+const MIGRATIONS_DIR = new URL('../supabase/migrations/', import.meta.url);
+const MIGRATION = readdirSync(MIGRATIONS_DIR)
+  .filter((f) => f.endsWith('.sql'))
+  .sort()
+  .map((f) => readFileSync(new URL(f, MIGRATIONS_DIR), 'utf8'))
+  .join('\n');
 
 const SUPABASE_AUTH_STUB = `
   create schema auth;
@@ -120,6 +125,15 @@ describe('row-level security', () => {
 });
 
 describe('Supabase default privileges', () => {
+  it('pins search_path on every public function', async () => {
+    const { rows } = await db.query<{ proname: string }>(
+      `select proname from pg_proc
+       where pronamespace = 'public'::regnamespace
+         and not coalesce(proconfig, '{}') @> array['search_path=""']`,
+    );
+    expect(rows.map((r) => r.proname)).toEqual([]);
+  });
+
   it('gives anonymous callers nothing', async () => {
     await createProject(ALICE, 'hidden-from-anon');
     await db.exec('set role anon');
