@@ -3,7 +3,7 @@
 > Ideas are cheap. Finished projects are valuable.
 > **Less starting. More shipping.**
 
-**Status:** Draft v0.2 · 2026-10-10 · Owner: Eric
+**Status:** v0.3 (decisions 1–2 confirmed) · 2026-10-10 · Owner: Eric
 **Sources:** merges Eric's *Product Development Plan v1.0* with Claude's spec v0.1. The differences and the call made on each are in [PLAN-COMPARISON.md](./PLAN-COMPARISON.md).
 **Repo state at writing:** empty (LICENSE only). Everything below is greenfield.
 **Naming:** "Finishline" is a working name. Check domain, app-store and trademark conflicts before a public launch.
@@ -412,12 +412,12 @@ Avoid vanity metrics such as total ideas captured.
 
 ---
 
-## 14. Open decisions
+## 14. Decisions
 
-| # | Decision | Recommendation |
+| # | Decision | Status |
 |---|---|---|
-| 1 | GitHub App vs OAuth App | **GitHub App** (read-only, per repo); the only way to get least privilege |
-| 2 | WIP cap vs priority field | **WIP cap of 3** plus a ranked Ready queue |
-| 3 | Stack | **Vanilla Web Components + Supabase + Netlify** |
-| 4 | Design spec timing | **Before Phase 1 UI**, as part of Phase 0 |
-| 5 | Tenancy | **Single-user** experience, RLS-isolated accounts |
+| 1 | GitHub App vs OAuth App | **Decided 2026-10-10: GitHub App** (read-only, per repo) |
+| 2 | WIP cap vs priority field | **Decided 2026-10-10: WIP cap of 3** plus a ranked Ready queue |
+| 3 | Stack | Default: **vanilla Web Components + Supabase + Netlify** |
+| 4 | Design spec timing | Default: **before Phase 1 UI**, as part of Phase 0 |
+| 5 | Tenancy | Default: **single-user** experience, RLS-isolated accounts |
