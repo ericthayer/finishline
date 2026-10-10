@@ -3,13 +3,69 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Finishline</title>
+    <meta name="color-scheme" content="dark light" />
+    <title>Finishlyne</title>
+    <script>
+      // Apply a remembered light theme before first paint; dark is the default.
+      try { if (localStorage.getItem('fl-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch {}
+    </script>
   </head>
-  <body>
-    <main id="app">
-      <h1>Finishline</h1>
-      <p>Foundation build. The interface arrives after the design spec is locked.</p>
-    </main>
+  <body class="fl-root">
+    <div id="app"></div>
+    <noscript>Finishlyne needs JavaScript.</noscript>
+
+    <template id="tpl-shell">
+      <div class="fl-app">
+        <aside class="fl-rail" aria-label="Primary">
+          <a class="fl-rail__mark" href="/" aria-label="Finishlyne home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 3v18 M12 3v18 M19 3v18" /><path d="M3 8h18" stroke="var(--signal)" /></svg>
+          </a>
+          <nav aria-label="Main">
+            <a class="fl-iconbtn" href="/" aria-label="Overview" data-route="overview"><fl-icon name="overview"></fl-icon></a>
+            <a class="fl-iconbtn" href="/projects" aria-label="Projects" data-route="projects project"><fl-icon name="projects"></fl-icon></a>
+            <a class="fl-iconbtn" href="/inbox" aria-label="Inbox" data-route="inbox"><fl-icon name="inbox"></fl-icon></a>
+            <a class="fl-iconbtn" href="/archive" aria-label="Archive" data-route="archive"><fl-icon name="shipped"></fl-icon></a>
+          </nav>
+          <div class="fl-rail__foot">
+            <a class="fl-iconbtn" href="/settings" aria-label="Settings" data-route="settings"><fl-icon name="settings"></fl-icon></a>
+            <fl-theme-toggle></fl-theme-toggle>
+            <button class="fl-iconbtn" type="button" aria-label="Sign out" data-action="sign-out"><fl-icon name="logout"></fl-icon></button>
+          </div>
+        </aside>
+        <header class="fl-topbar">
+          <span></span>
+          <form class="fl-search" role="search" action="/projects">
+            <fl-icon name="search"></fl-icon>
+            <label class="fl-sr" for="fl-q">Search projects</label>
+            <input id="fl-q" name="q" type="search" placeholder="Search projects" autocomplete="off" />
+          </form>
+          <div class="fl-topbar__end">
+            <span class="fl-avatar" data-slot="avatar" role="img"></span>
+          </div>
+        </header>
+        <div class="fl-app__body" data-slot="body">
+          <main class="fl-main" id="main" tabindex="-1" data-slot="main"></main>
+          <aside class="fl-aside" aria-labelledby="h-activity" data-slot="aside">
+            <div class="fl-aside__head"><h2 id="h-activity">Recent activity</h2></div>
+            <div data-slot="feed"></div>
+          </aside>
+        </div>
+      </div>
+    </template>
+
+    <template id="tpl-signin">
+      <main class="fl-signin" aria-labelledby="signin-title">
+        <section class="fl-panel fl-signin__panel">
+          <svg class="fl-signin__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 3v18 M12 3v18 M19 3v18" /><path d="M3 8h18" stroke="var(--signal)" /></svg>
+          <h1 id="signin-title">Finishlyne</h1>
+          <p class="fl-muted">Ideas are cheap. Finished projects are valuable.</p>
+          <button class="fl-btn fl-btn--primary" type="button" data-action="sign-in"><fl-icon name="github"></fl-icon>Continue with GitHub</button>
+          <p class="fl-signin__note">Signs you in with the Finishlyne GitHub App. Your projects are private to your account.</p>
+          <p class="fl-signin__error" role="alert" data-slot="error"></p>
+        </section>
+      </main>
+    </template>
+
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

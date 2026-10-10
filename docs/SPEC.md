@@ -1,4 +1,4 @@
-# Finishline — MVP Spec
+# Finishlyne — MVP Spec
 
 > Ideas are cheap. Finished projects are valuable.
 > **Less starting. More shipping.**
@@ -6,15 +6,15 @@
 **Status:** v0.3 (decisions 1–2 confirmed) · 2026-10-10 · Owner: Eric
 **Sources:** merges Eric's *Product Development Plan v1.0* with Claude's spec v0.1. The differences and the call made on each are in [PLAN-COMPARISON.md](./PLAN-COMPARISON.md).
 **Repo state at writing:** empty (LICENSE only). Everything below is greenfield.
-**Naming:** "Finishline" is a working name. Check domain, app-store and trademark conflicts before a public launch.
+**Naming:** "Finishlyne" is the product name (renamed from "Finishline" on 2026-10-10). Check domain, app-store and trademark conflicts before a public launch.
 
 ---
 
 ## 1. Product thesis
 
-Finishline is a **personal command center** for developers and designers whose projects start across AI coding platforms (Claude, Codex, Google AI Studio, Bolt…). Starting is now cheap, so projects pile up without a path to completion. Finishline gives every promising idea a home, a next step and a path to done. It owns three things GitHub and the agent platforms don't:
+Finishlyne is a **personal command center** for developers and designers whose projects start across AI coding platforms (Claude, Codex, Google AI Studio, Bolt…). Starting is now cheap, so projects pile up without a path to completion. Finishlyne gives every promising idea a home, a next step and a path to done. It owns three things GitHub and the agent platforms don't:
 
-| Finishline owns | GitHub owns | Agent platforms own |
+| Finishlyne owns | GitHub owns | Agent platforms own |
 |---|---|---|
 | Intent (outcome, definition of done) | Repo identity, code, branches, commits | The working session |
 | Priority (what deserves attention now) | Issues, PRs | Platform-specific context |
@@ -24,14 +24,14 @@ Finishline is a **personal command center** for developers and designers whose p
 
 **Primary user:** a solo developer, product designer or design engineer who experiments across several AI coding platforms and keeps code in GitHub.
 
-**Primary job:** "Open Finishline, know within 60 seconds what to work on and exactly what to paste into my agent."
+**Primary job:** "Open Finishlyne, know within 60 seconds what to work on and exactly what to paste into my agent."
 
 ### Principles
 
 1. **Project-first, agent-agnostic.** The record persists whichever platform does the work.
 2. **Completion over activity.** Optimize for shipping and deliberate archiving, not projects created or boxes checked.
 3. **Lightweight by default.** Capture takes seconds and needs only a name. No planning rituals.
-4. **GitHub is the source of truth for code.** Finishline never duplicates or overrides repo facts.
+4. **GitHub is the source of truth for code.** Finishlyne never duplicates or overrides repo facts.
 5. **One explicit next action** on every open project.
 6. **Private personal workspace.** No teams, roles or admin in the MVP.
 7. **Forced choices beat optional ones.** Gates and caps make decisions happen; fields alone don't.
@@ -144,7 +144,7 @@ type ProjectEvent =
 
 **Data ownership**
 
-- Finishline is authoritative for intent, lifecycle, priority, blockers, decisions and resume context.
+- Finishlyne is authoritative for intent, lifecycle, priority, blockers, decisions and resume context.
 - GitHub is authoritative for repo identity and activity. Cached GitHub fields are never treated as project data and always show their sync time.
 - Platform selection is user-maintained metadata, never inferred.
 
@@ -341,7 +341,7 @@ supabase/
 
 ## 9. Build plan
 
-Each phase ends usable. Dogfood from the end of Phase 1; Finishline's own build is project #1.
+Each phase ends usable. Dogfood from the end of Phase 1; Finishlyne's own build is project #1.
 
 | Phase | Ships | Done when |
 |---|---|---|
@@ -351,7 +351,7 @@ Each phase ends usable. Dogfood from the end of Phase 1; Finishline's own build 
 | **3. GitHub** | App install, repo picker, link/unlink, tracked branch, issue/PR links, webhooks, activity in detail view, pushes update staleness, disconnect | A push from Claude Code on a `claude/*` branch freshens the project; disconnect leaves projects intact |
 | **4. Attention** | Stale engine, Overview "Needs a decision" lane, Review action, threshold and WIP settings | A 10-minute weekly review clears every "Needs a decision" item |
 | **5. Validation** | Privacy (cross-account RLS tests), mobile, keyboard and screen reader, empty/loading/error states, a real week of personal use | Every acceptance criterion in §10 passes against real projects |
-| **Later (evidence-gated)** | **Finishline MCP server** (agents read the brief and write checkpoints themselves; the likely first integration and the bridge to orchestration), repo context file, AI-drafted checkpoints, platform-specific brief variants | Only when a week of use shows the manual step is the real friction |
+| **Later (evidence-gated)** | **Finishlyne MCP server** (agents read the brief and write checkpoints themselves; the likely first integration and the bridge to orchestration), repo context file, AI-drafted checkpoints, platform-specific brief variants | Only when a week of use shows the manual step is the real friction |
 
 ---
 
@@ -375,7 +375,7 @@ Each phase ends usable. Dogfood from the end of Phase 1; Finishline's own build 
 - Tickets, subtasks, sprints, estimates, assignees, comments; replacing GitHub Issues, Linear or Jira.
 - Kanban or Gantt views.
 - Teams, sharing, roles, billing, admin.
-- Integrations with any agent platform, and launching or orchestrating agents from Finishline.
+- Integrations with any agent platform, and launching or orchestrating agents from Finishlyne.
 - Writing anything to GitHub, or storing code.
 - AI-generated summaries or checkpoints.
 - Gamification: streaks, scores, productivity metrics, counters that celebrate volume.

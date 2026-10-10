@@ -1,4 +1,4 @@
-# Setup: accounts Finishline needs
+# Setup: accounts Finishlyne needs
 
 Three things only the owner can create. None of the values below are secrets except where marked; secrets go into Supabase or Netlify settings, never into the repo.
 
@@ -23,7 +23,7 @@ GitHub → Settings → Developer settings → GitHub Apps → New GitHub App.
 
 | Setting | Value |
 |---|---|
-| Name | `Finishline (<your handle>)` |
+| Name | `Finishlyne (<your handle>)` |
 | Homepage URL | Netlify site URL |
 | Callback URL | `https://<supabase-ref>.supabase.co/auth/v1/callback` |
 | Request user authorization (OAuth) during installation | On |
@@ -40,4 +40,15 @@ Then:
 
 ## 3. Netlify site
 
-Connect the repo, build command `npm run build`, publish directory `dist`, and set the two `VITE_SUPABASE_*` env vars.
+Connect the repo (build settings come from `netlify.toml`) and set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or their `VITE_` forms) as env vars.
+
+## 4. Sign-in redirect URLs
+
+Supabase only redirects back to URLs it knows. In **Authentication → URL Configuration**:
+
+| Setting | Value |
+|---|---|
+| Site URL | The Netlify production URL, e.g. `https://ericthayer-dev.netlify.app` |
+| Redirect URLs | `http://localhost:5173/**` (local dev) and `https://*--ericthayer-dev.netlify.app/**` (deploy previews) |
+
+Then check end to end: open a deploy preview, click **Continue with GitHub**, approve the Finishlyne App, and you land on an empty Overview. That is Phase 0's done-when.
