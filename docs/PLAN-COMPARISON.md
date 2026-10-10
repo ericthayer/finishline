@@ -8,7 +8,7 @@
 |---|---|
 | Thesis | Ideas are cheap, finished projects are valuable |
 | Organizing unit | Project, with agent platform as metadata |
-| Ownership split | GitHub owns code and activity; Finishline owns intent, priority, continuity |
+| Ownership split | GitHub owns code and activity; Finishlyne owns intent, priority, continuity |
 | Scope | Personal, single-user, data isolated per user |
 | Integrations | GitHub only; platform is a manual label; others only if they're needed |
 | Resume | Brief generated from stored fields, copied into any agent |

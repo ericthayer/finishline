@@ -1,8 +1,8 @@
-# Finishline design spec
+# Finishlyne design spec
 
 **Status:** v2 approved and locked (2026-10-10). Dark-first dashboard shell with fluid type and layout for 2K displays. Changes to the visual language go through this doc.
 
-**Live spec:** [Finishline design system](https://claude.ai/artifact/H24xMhZE5icRofmFfSeJ7P) (brand book, tokens, every component with previews, the Overview and Resume screens).
+**Live spec:** [Finishlyne design system](https://claude.ai/artifact/H24xMhZE5icRofmFfSeJ7P) (brand book, tokens, every component with previews, the Overview and Resume screens).
 
 ## Direction
 

@@ -1,4 +1,4 @@
-# Finishline
+# Finishlyne
 
 > Ideas are cheap. Finished projects are valuable. **Less starting. More shipping.**
 
