@@ -5,8 +5,17 @@ Three things only the owner can create. None of the values below are secrets exc
 ## 1. Supabase project
 
 1. Create a project (free tier is fine to start; see SPEC §8 on the inactivity pause).
-2. Apply the schema: `supabase link --project-ref <ref>` then `supabase db push` (applies `supabase/migrations/`).
-3. Copy **Project URL** and **publishable key** into `.env.local` (see `.env.example`) and into Netlify env vars.
+2. **Apply the schema** (one time, about a minute):
+   1. Open the project in the Supabase dashboard → **SQL Editor** → **New query**.
+   2. Paste the whole of [`supabase/migrations/20261010000000_init.sql`](../supabase/migrations/20261010000000_init.sql) and click **Run**. It should finish with "Success. No rows returned".
+   3. Check: **Table Editor** lists 10 tables (`projects`, `ship_criteria`, `decisions`, `blockers`, `project_platforms`, `checkpoints`, `repo_links`, `issue_links`, `project_events`, `user_settings`), each marked RLS enabled.
+
+   CLI alternative: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+3. **Point the app at the project:** in **Project Settings → API Keys** copy the **Project URL** and the **publishable key** (`sb_publishable_…`). Both are public by design (row-level security protects the data). Put them in:
+   - `.env.local` at the repo root for local dev (copy `.env.example`; the file is gitignored), and
+   - Netlify → Site configuration → Environment variables, once the site exists (step 3).
+
+   Never use the **secret** key (`sb_secret_…`) in the app or the repo.
 
 ## 2. GitHub App (decided 2026-10-10: GitHub App, not OAuth App)
 

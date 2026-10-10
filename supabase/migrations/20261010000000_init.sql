@@ -402,6 +402,11 @@ create policy owner_read on public.project_events for select to authenticated
 create policy owner_append on public.project_events for insert to authenticated
   with check (user_id = (select auth.uid()) and source = 'user');
 
+-- Supabase grants ALL on new public objects to anon and authenticated by
+-- default. Start from nothing, then grant exactly what the app needs.
+revoke all on all tables in schema public from anon, authenticated;
+revoke all on all functions in schema public from anon, authenticated, public;
+
 grant usage on schema public to authenticated;
 grant select, insert, update, delete on
   public.user_settings, public.projects, public.ship_criteria, public.decisions, public.blockers,
@@ -411,4 +416,4 @@ grant select, delete on public.repo_links to authenticated;
 grant update (tracked_branch) on public.repo_links to authenticated;
 grant select on public.issue_links to authenticated;
 grant select, insert on public.project_events to authenticated;
-grant execute on function public.transition_project to authenticated;
+grant execute on function public.transition_project, public.progress_event_types to authenticated;
