@@ -41,3 +41,14 @@ Then:
 ## 3. Netlify site
 
 Connect the repo, build command `npm run build`, publish directory `dist`, and set the two `VITE_SUPABASE_*` env vars.
+
+## 4. Sign-in redirect URLs
+
+Supabase only redirects back to URLs it knows. In **Authentication → URL Configuration**:
+
+| Setting | Value |
+|---|---|
+| Site URL | The Netlify production URL, e.g. `https://ericthayer-dev.netlify.app` |
+| Redirect URLs | `http://localhost:5173/**` (local dev) and `https://*--ericthayer-dev.netlify.app/**` (deploy previews) |
+
+Then check end to end: open a deploy preview, click **Continue with GitHub**, approve the Finishline App, and you land on an empty Overview. That is Phase 0's done-when.

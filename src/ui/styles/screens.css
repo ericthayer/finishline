@@ -1,0 +1,17 @@
+/* App-level screen styles. Token values only; components.css stays as the design spec ships it. */
+
+.fl-signin { display: grid; place-items: center; min-height: 100dvh; padding: var(--space-8); box-sizing: border-box; }
+.fl-signin__panel { justify-items: center; gap: var(--space-4); width: min(clamp(360px, 26vw, 520px), 100%); box-sizing: border-box; padding: var(--space-12) var(--space-8); text-align: center; }
+.fl-signin__mark { width: calc(var(--control-height) * 1.4); height: calc(var(--control-height) * 1.4); color: var(--ink); }
+.fl-signin h1 { margin: 0; font: var(--text-display-lg-weight) var(--text-display-lg-size)/var(--text-display-lg-leading) var(--font-sans); letter-spacing: -0.02em; }
+.fl-signin p { margin: 0; }
+.fl-signin .fl-btn { width: 100%; margin-top: var(--space-2); }
+.fl-signin__note { color: var(--ink-muted); font: 400 var(--text-small-size)/var(--text-small-leading) var(--font-sans); max-width: 36ch; }
+.fl-signin__error { color: var(--danger); font: 400 var(--text-small-size)/var(--text-small-leading) var(--font-sans); }
+.fl-signin__error:empty { display: none; }
+
+.fl-empty { display: grid; justify-items: start; gap: var(--space-3); color: var(--ink-muted); }
+.fl-empty h2, .fl-empty h3 { margin: 0; color: var(--ink); font: var(--text-title-weight) var(--text-title-size)/var(--text-title-leading) var(--font-sans); }
+.fl-empty p { margin: 0; max-width: 60ch; }
+.fl-main:focus { outline: none; }
+a.fl-btn { text-decoration: none; }

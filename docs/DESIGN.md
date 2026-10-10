@@ -1,6 +1,6 @@
 # Finishline design spec
 
-**Status:** v2 draft for approval (2026-10-10). Dark-first refinement requested by Eric: dashboard shell, fluid type and layout for 2K displays. Once approved, the visual language below is locked; changes go through this doc.
+**Status:** v2 approved and locked (2026-10-10). Dark-first dashboard shell with fluid type and layout for 2K displays. Changes to the visual language go through this doc.
 
 **Live spec:** [Finishline design system](https://claude.ai/artifact/H24xMhZE5icRofmFfSeJ7P) (brand book, tokens, every component with previews, the Overview and Resume screens).
 
@@ -36,7 +36,8 @@ Dark-first command center. A near-black shell that fills the screen (icon rail, 
 | `design/build-tokens.mjs` | Compiles tokens to CSS custom properties, per-style `--text-*` variables and `.style` type classes |
 | `src/ui/tokens/tokens.css` | Generated; never edit. `npm run tokens` rebuilds, a test fails if it drifts |
 | `src/ui/styles/components.css` | Locked component styles (`fl-*` classes), token values only |
-| `design/reference/components.js` | Reference Custom Elements from the spec; Phase 1 ports these to TypeScript in `src/ui/` |
+| `src/ui/components/` | The Custom Elements in strict TypeScript, one module per component; the source of truth for code |
+| `design/reference/components.js` | The spec's original bundle, kept for comparison with the live design system |
 
 ## Theming
 
