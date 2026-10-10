@@ -40,7 +40,7 @@ Then:
 
 ## 3. Netlify site
 
-Connect the repo (build settings come from `netlify.toml`) and set the two `VITE_SUPABASE_*` env vars.
+Connect the repo (build settings come from `netlify.toml`) and set `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` (or their `VITE_` forms) as env vars.
 
 ## 4. Sign-in redirect URLs
 
