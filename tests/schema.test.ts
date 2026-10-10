@@ -13,7 +13,13 @@ const SUPABASE_AUTH_STUB = `
     select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
   $$;
   create role authenticated nologin;
-  grant usage on schema auth to authenticated;
+  create role anon nologin;
+  grant usage on schema auth to authenticated, anon;
+  grant usage on schema public to anon;
+  -- Supabase grants everything in public to API roles by default; RLS and the
+  -- migration's revokes must hold up against that.
+  alter default privileges in schema public grant all on tables to anon, authenticated;
+  alter default privileges in schema public grant all on functions to anon, authenticated;
 `;
 
 const ALICE = '00000000-0000-0000-0000-00000000000a';
@@ -109,6 +115,31 @@ describe('row-level security', () => {
           [id],
         ),
       ),
+    ).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe('Supabase default privileges', () => {
+  it('gives anonymous callers nothing', async () => {
+    await createProject(ALICE, 'hidden-from-anon');
+    await db.exec('set role anon');
+    try {
+      await expect(db.query('select id from public.projects')).rejects.toThrow(/permission denied/);
+    } finally {
+      await db.exec('reset role');
+    }
+  });
+
+  it('only lets users retarget the tracked branch of a repo link', async () => {
+    const id = await createProject(ALICE, 'linked');
+    await db.query(
+      `insert into public.repo_links (user_id, project_id, github_repo_id, full_name, default_branch, installation_id)
+       values ($1, $2, 42, 'alice/linked', 'main', 7)`,
+      [ALICE, id],
+    );
+    await as(ALICE, () => db.query(`update public.repo_links set tracked_branch = 'dev' where project_id = $1`, [id]));
+    await expect(
+      as(ALICE, () => db.query(`update public.repo_links set github_repo_id = 99 where project_id = $1`, [id])),
     ).rejects.toThrow(/permission denied/);
   });
 });
