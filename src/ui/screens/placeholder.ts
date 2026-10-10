@@ -22,5 +22,5 @@ export function renderPlaceholder(main: HTMLElement, name: string): void {
   panel.append(el('p', null, copy.body), back);
   main.setAttribute('aria-labelledby', 'page-title');
   main.replaceChildren(head, panel);
-  document.title = `${copy.title} · Finishline`;
+  document.title = `${copy.title} · Finishlyne`;
 }

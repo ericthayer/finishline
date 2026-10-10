@@ -16,5 +16,5 @@ export function renderSignIn(host: HTMLElement, onSignIn: () => Promise<string |
     }
   });
   host.replaceChildren(fragment);
-  document.title = 'Sign in · Finishline';
+  document.title = 'Sign in · Finishlyne';
 }

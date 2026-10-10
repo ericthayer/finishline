@@ -41,7 +41,7 @@ export function renderOverviewLoading(main: HTMLElement): void {
   status.append(el('p', null, 'Loading your projects…'));
   main.setAttribute('aria-labelledby', 'page-title');
   main.replaceChildren(pageHead(), status);
-  document.title = 'Overview · Finishline';
+  document.title = 'Overview · Finishlyne';
 }
 
 export function renderOverviewError(main: HTMLElement, message: string, retry: () => void): void {
@@ -79,7 +79,7 @@ export function renderOverview(main: HTMLElement, feedHost: HTMLElement, m: Over
     start.append(icon('plus'), document.createTextNode('Capture your first idea'));
     empty.append(
       el('h3', null, 'No projects yet'),
-      el('p', null, 'Capture every side project here, then promote up to three to Active. Finishline keeps each one ready to resume.'),
+      el('p', null, 'Capture every side project here, then promote up to three to Active. Finishlyne keeps each one ready to resume.'),
       start,
     );
     now.section.append(empty);
