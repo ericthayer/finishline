@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="dark light" />
-    <title>Finishline</title>
+    <title>Finishlyne</title>
     <script>
       // Apply a remembered light theme before first paint; dark is the default.
       try { if (localStorage.getItem('fl-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch {}
@@ -12,12 +12,12 @@
   </head>
   <body class="fl-root">
     <div id="app"></div>
-    <noscript>Finishline needs JavaScript.</noscript>
+    <noscript>Finishlyne needs JavaScript.</noscript>
 
     <template id="tpl-shell">
       <div class="fl-app">
         <aside class="fl-rail" aria-label="Primary">
-          <a class="fl-rail__mark" href="/" aria-label="Finishline home">
+          <a class="fl-rail__mark" href="/" aria-label="Finishlyne home">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 3v18 M12 3v18 M19 3v18" /><path d="M3 8h18" stroke="var(--signal)" /></svg>
           </a>
           <nav aria-label="Main">
@@ -57,10 +57,10 @@
       <main class="fl-signin" aria-labelledby="signin-title">
         <section class="fl-panel fl-signin__panel">
           <svg class="fl-signin__mark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 3v18 M12 3v18 M19 3v18" /><path d="M3 8h18" stroke="var(--signal)" /></svg>
-          <h1 id="signin-title">Finishline</h1>
+          <h1 id="signin-title">Finishlyne</h1>
           <p class="fl-muted">Ideas are cheap. Finished projects are valuable.</p>
           <button class="fl-btn fl-btn--primary" type="button" data-action="sign-in"><fl-icon name="github"></fl-icon>Continue with GitHub</button>
-          <p class="fl-signin__note">Signs you in with the Finishline GitHub App. Your projects are private to your account.</p>
+          <p class="fl-signin__note">Signs you in with the Finishlyne GitHub App. Your projects are private to your account.</p>
           <p class="fl-signin__error" role="alert" data-slot="error"></p>
         </section>
       </main>
