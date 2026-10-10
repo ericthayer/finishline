@@ -8,7 +8,7 @@ import type { Backend } from './client.ts';
 
 // Reads everything the Overview needs in parallel. RLS scopes every query to the signed-in user.
 
-interface ProjectRow {
+export interface ProjectRow {
   id: string;
   slug: string;
   name: string;
