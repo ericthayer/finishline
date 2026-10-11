@@ -6,9 +6,11 @@ import './ui/components/index.ts';
 import { bindCaptureShortcut, wireCapture } from './app/capture.ts';
 import { showInbox, type InboxController } from './app/inbox.ts';
 import { showProjects } from './app/projects.ts';
+import { showSettings } from './app/settings.ts';
 import { startRouter, type Route } from './app/router.ts';
 import { mountShell, type Shell } from './app/shell.ts';
 import { createBackend, readConfig, type Backend } from './data/client.ts';
+import { DEFAULT_WIP_CAP } from './domain/lifecycle.ts';
 import { loadOverview } from './data/overview.ts';
 import { supabaseProjects } from './data/projects.ts';
 import { signInWithGitHub, signOut, watchSession } from './data/session.ts';
@@ -46,6 +48,7 @@ function start(root: HTMLElement, backend: Backend): void {
     if (route.name === 'overview') void showOverview(shell);
     else if (route.name === 'inbox') inbox = showInbox(shell.main, repo);
     else if (route.name === 'projects') showProjects(shell.main, repo, new URLSearchParams(location.search).get('q') ?? '');
+    else if (route.name === 'settings') showSettings(shell.main, repo);
     else renderPlaceholder(shell.main, route.name);
   };
 
@@ -54,7 +57,9 @@ function start(root: HTMLElement, backend: Backend): void {
     try {
       const data = await loadOverview(backend);
       if (current?.name !== 'overview') return;
-      renderOverview(s.main, s.feed, buildOverview(data, new Date()));
+      const cap = await repo.loadWipCap().catch(() => DEFAULT_WIP_CAP);
+      if (current?.name !== 'overview') return;
+      renderOverview(s.main, s.feed, buildOverview(data, new Date(), cap));
     } catch (error) {
       renderOverviewError(s.main, error instanceof Error ? error.message : String(error), () => void showOverview(s));
     }

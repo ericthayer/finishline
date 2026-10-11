@@ -22,7 +22,7 @@ export interface ProjectsController {
   refresh(): Promise<void>;
 }
 
-export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship'>;
+export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship' | 'loadWipCap'>;
 
 /** Mounts the Projects list into `main`. `initialQuery` comes from the top-bar search (`?q=`). */
 export function showProjects(
@@ -35,6 +35,7 @@ export function showProjects(
   let listings: ProjectListing[] = [];
   let loaded = false;
   let generation = 0;
+  let wipCap = DEFAULT_WIP_CAP;
 
   const paint = (): void => {
     if (!loaded) return;
@@ -51,9 +52,11 @@ export function showProjects(
     const mine = ++generation;
     if (!loaded) screen.setLoading();
     try {
-      const next = await repo.listProjects();
+      // A failed settings read keeps the last known cap; the database still enforces the real one.
+      const [next, cap] = await Promise.all([repo.listProjects(), repo.loadWipCap().catch(() => wipCap)]);
       if (mine !== generation || !main.contains(screen.root)) return;
       listings = next;
+      wipCap = cap;
       loaded = true;
       paint();
     } catch (error) {
@@ -68,7 +71,7 @@ export function showProjects(
   // The database re-checks every gate; this only saves a round trip and gives the same copy.
   const start = (id: string, name: string, listing: ProjectListing): void => {
     const activeCount = listings.filter((l) => l.project.status === 'active').length;
-    const check = checkTransition(listing.project, 'active', { activeCount, wipCap: DEFAULT_WIP_CAP, shipCriteria: [] });
+    const check = checkTransition(listing.project, 'active', { activeCount, wipCap, shipCriteria: [] });
     if (!check.ok) {
       screen.announce(check.failures.map((f) => explainGate(f, 'active')).join(' '));
       return;

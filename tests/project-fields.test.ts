@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkProjectFields, NAME_EMPTY_COPY } from '../src/domain/project-fields.ts';
+import { checkProjectFields, NAME_EMPTY_COPY, WIP_CAP_COPY, wipCapError } from '../src/domain/project-fields.ts';
 import { requiresNextAction } from '../src/domain/lifecycle.ts';
 
 describe('requiresNextAction', () => {
@@ -31,5 +31,15 @@ describe('shipUrlError', () => {
     expect(shipUrlError('https://example.com/app')).toBeNull();
     expect(shipUrlError('http://example.com')).toBe(SHIP_URL_COPY);
     expect(shipUrlError('not a link')).toBe(SHIP_URL_COPY);
+  });
+});
+
+describe('wipCapError', () => {
+  it('accepts whole numbers from 1 to 10', () => {
+    for (const ok of ['1', '3', ' 10 ']) expect(wipCapError(ok)).toBeNull();
+  });
+
+  it('refuses everything else with the same copy', () => {
+    for (const bad of ['', '0', '11', '2.5', '-1', 'three', '1e1']) expect(wipCapError(bad)).toBe(WIP_CAP_COPY);
   });
 });

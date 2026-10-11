@@ -170,6 +170,18 @@ test('a full lane explains itself and changes nothing', async ({ page }) => {
   await expect(page.getByRole('row', { name: /Univia/ })).toContainText('Ready');
 });
 
+test('a raised WIP cap lets another project start', async ({ page }) => {
+  await open(page, '?full&cap=4');
+  await page.getByRole('button', { name: 'Start Univia' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“Univia” is Active.');
+});
+
+test('a lowered WIP cap blocks Start with its own number', async ({ page }) => {
+  await open(page, '?full&cap=2');
+  await page.getByRole('button', { name: 'Start Univia' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('All 2 lanes are full. Pause, ship or archive an Active project first.');
+});
+
 test('Resume moves a paused project back to Active', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Resume Stacker' }).click();

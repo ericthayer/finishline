@@ -7,7 +7,15 @@ import { project } from '../../fixtures.ts';
 export function memoryRepo(seed: Idea[], fail: string | null): ProjectsRepo {
   const ideas = [...seed];
   let n = 0;
+  let wipCap = 3;
   return {
+    async loadWipCap() {
+      return wipCap;
+    },
+    async saveWipCap(cap: number) {
+      if (fail === 'settings') throw new Error('Network down');
+      wipCap = cap;
+    },
     async listIdeas() {
       if (fail === 'list') throw new Error('Network down');
       return ideas.map((i) => ({ project: i.project, criteria: [...i.criteria] }));

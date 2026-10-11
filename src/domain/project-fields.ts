@@ -34,3 +34,15 @@ export function checkProjectFields(
     nextAction: nextActionMissing(status, values.nextAction),
   };
 }
+
+export const WIP_CAP_MIN = 1;
+export const WIP_CAP_MAX = 10;
+export const WIP_CAP_COPY = `Use a whole number from ${WIP_CAP_MIN} to ${WIP_CAP_MAX}.`;
+
+/** The cap is a whole number the database also bounds; null when the text is a valid cap. */
+export function wipCapError(raw: string): string | null {
+  const value = raw.trim();
+  if (!/^\d+$/.test(value)) return WIP_CAP_COPY;
+  const n = Number(value);
+  return n < WIP_CAP_MIN || n > WIP_CAP_MAX ? WIP_CAP_COPY : null;
+}
