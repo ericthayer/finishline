@@ -1,7 +1,7 @@
 import { planCriteria } from '../domain/gates.ts';
 import { DEFAULT_WIP_CAP } from '../domain/lifecycle.ts';
 import { slugify, uniqueSlug } from '../domain/slug.ts';
-import type { AgentPlatformId, Project } from '../domain/types.ts';
+import type { AgentPlatformId, PlatformLink, Project } from '../domain/types.ts';
 import type { Backend } from './client.ts';
 import { toProject, type ProjectRow } from './overview.ts';
 
@@ -13,14 +13,18 @@ export interface CaptureInput {
   name: string;
   summary?: string;
   outcome?: string;
+  /** The current platform and its deep link, when known at creation. */
+  platform?: PlatformLink | null;
 }
 
-/** Words-only edit. Status is never written here; it moves through promote and archive. */
+/** Words and current platform. Status is never written here; it moves through promote and archive. */
 export interface EditInput {
   name: string;
   summary: string;
   outcome: string;
   nextAction: string;
+  /** Null clears the current platform; its history row is kept as 'past'. */
+  platform: PlatformLink | null;
 }
 
 export interface CriterionRecord {
@@ -38,7 +42,7 @@ export interface Idea {
 /** A project as the list shows it: its current platform and first linked repo, when set. */
 export interface ProjectListing {
   project: Project;
-  platform: AgentPlatformId | null;
+  platform: PlatformLink | null;
   repo: string | null;
 }
 
@@ -70,7 +74,7 @@ export interface ProjectsRepo {
   /** Every project the user owns, any status. */
   listProjects(): Promise<ProjectListing[]>;
   capture(input: CaptureInput): Promise<Project>;
-  /** Saves name, summary, outcome and next action. The slug, and so the link, never changes. */
+  /** Saves name, summary, outcome, next action and current platform. The slug, and so the link, never changes. */
   update(id: string, input: EditInput): Promise<void>;
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
@@ -112,6 +116,13 @@ const UNIQUE_VIOLATION = '23505';
 const orNull = (value: string | undefined): string | null => value?.trim() || null;
 const CAPTURE_ATTEMPTS = 3;
 
+interface PlatformRow {
+  project_id: string;
+  platform: AgentPlatformId;
+  label: string | null;
+  url: string | null;
+}
+
 interface CriterionRow {
   id: string;
   project_id: string;
@@ -127,6 +138,16 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
     const { data, error } = await db.from('projects').select('slug').like('slug', `${base}%`);
     if (error) fail(error);
     return new Set(((data ?? []) as { slug: string }[]).map((r) => r.slug));
+  };
+
+  const setPlatform = async (id: string, link: PlatformLink | null): Promise<void> => {
+    const { error } = await db.rpc('set_current_platform', {
+      p_project_id: id,
+      p_platform: link?.platform ?? null,
+      p_label: link?.label ?? null,
+      p_url: link?.url ?? null,
+    });
+    if (error) fail(error);
   };
 
   return {
@@ -152,14 +173,14 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
     async listProjects() {
       const [projects, platforms, repos] = await Promise.all([
         db.from('projects').select('*').order('name'),
-        db.from('project_platforms').select('project_id, platform').eq('role', 'current'),
+        db.from('project_platforms').select('project_id, platform, label, url').eq('role', 'current'),
         db.from('repo_links').select('project_id, full_name').order('linked_at'),
       ]);
       for (const r of [projects, platforms, repos]) if (r.error) fail(r.error);
 
-      const platformByProject = new Map<string, AgentPlatformId>();
-      for (const p of (platforms.data ?? []) as { project_id: string; platform: AgentPlatformId }[]) {
-        platformByProject.set(p.project_id, p.platform);
+      const platformByProject = new Map<string, PlatformLink>();
+      for (const p of (platforms.data ?? []) as PlatformRow[]) {
+        platformByProject.set(p.project_id, { platform: p.platform, label: p.label, url: p.url });
       }
       const repoByProject = new Map<string, string>();
       for (const r of (repos.data ?? []) as { project_id: string; full_name: string }[]) {
@@ -172,7 +193,7 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
       }));
     },
 
-    async capture({ name, summary, outcome }) {
+    async capture({ name, summary, outcome, platform }) {
       const base = slugify(name);
       let last: DbError | null = null;
       // Two tabs can race for the same slug; the unique index decides and we take the next one.
@@ -183,19 +204,24 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
           .insert({ name: name.trim(), slug, summary: orNull(summary), outcome: orNull(outcome) })
           .select('*')
           .single();
-        if (!error) return toProject(data as ProjectRow);
+        if (!error) {
+          const created = toProject(data as ProjectRow);
+          if (platform) await setPlatform(created.id, platform);
+          return created;
+        }
         if (error.code !== UNIQUE_VIOLATION) fail(error);
         last = error;
       }
       return fail(last ?? { message: 'Could not capture this idea.', code: 'unknown' });
     },
 
-    async update(id, { name, summary, outcome, nextAction }) {
+    async update(id, { name, summary, outcome, nextAction, platform }) {
       const saved = await db
         .from('projects')
         .update({ name: name.trim(), summary: orNull(summary), outcome: orNull(outcome), next_action: orNull(nextAction) })
         .eq('id', id);
       if (saved.error) fail(saved.error);
+      await setPlatform(id, platform);
     },
 
     async promote(id, { outcome, nextAction, criteria }) {

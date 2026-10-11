@@ -117,3 +117,20 @@ fl-inbox-list { display: block; }
 .fl-settings__status { min-height: 1lh; margin: 0; }
 .fl-settings__form { display: grid; gap: var(--space-4); max-inline-size: 28rem; }
 .fl-settings__form .fl-btn { justify-self: start; }
+
+/* ── Platform fields (create/edit project) ──────────────── */
+/* Selects match the text inputs in components.css; hidden fields really hide despite .fl-field's grid. */
+.fl-field[hidden] { display: none; }
+.fl-field select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface-sunken);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  min-height: var(--control-height);
+  min-width: 0;
+  box-sizing: border-box;
+}
+.fl-field select:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
+.fl-field[data-invalid] select { border-color: var(--danger); }

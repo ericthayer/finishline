@@ -238,3 +238,68 @@ describe('lifecycle gates', () => {
     expect((await transition(ALICE, id, 'shipped', { ship_anyway: true })).status).toBe('shipped');
   });
 });
+
+describe('open projects keep a next action', () => {
+  it('rejects blanking the next action on Ready, Active or Paused with a plain update', async () => {
+    const id = await readyProject(ALICE, 'keep-next');
+    for (const blank of [null, '', '   ']) {
+      await expect(
+        as(ALICE, () => db.query(`update public.projects set next_action = $2 where id = $1`, [id, blank])),
+      ).rejects.toThrow(/open_has_next_action/);
+    }
+    await transition(ALICE, id, 'active');
+    await expect(as(ALICE, () => db.query(`update public.projects set next_action = null where id = $1`, [id]))).rejects.toThrow(
+      /open_has_next_action/,
+    );
+  });
+
+  it('still lets ideas and closed projects go without one', async () => {
+    const id = await createProject(ALICE, 'no-next-idea');
+    await as(ALICE, () => db.query(`update public.projects set next_action = null where id = $1`, [id]));
+    const shipped = await readyProject(ALICE, 'no-next-shipped');
+    await transition(ALICE, shipped, 'active');
+    await transition(ALICE, shipped, 'shipped', { ship_anyway: true });
+    await as(ALICE, () => db.query(`update public.projects set next_action = null where id = $1`, [shipped]));
+  });
+});
+
+describe('set_current_platform', () => {
+  const current = (id: string) =>
+    as(ALICE, async () =>
+      (
+        await db.query<{ platform: string; label: string | null; url: string | null; role: string }>(
+          `select platform, label, url, role from public.project_platforms where project_id = $1 order by created_at, role`,
+          [id],
+        )
+      ).rows,
+    );
+  const set = (uid: string, id: string, platform: string | null, label: string | null = null, url: string | null = null) =>
+    as(uid, () => db.query(`select public.set_current_platform($1, $2::public.agent_platform, $3, $4)`, [id, platform, label, url]));
+
+  it('sets, edits in place, moves the old one to past, and clears', async () => {
+    const id = await createProject(ALICE, 'platformed');
+    await set(ALICE, id, 'bolt', null, 'https://bolt.new/p/1');
+    expect(await current(id)).toEqual([{ platform: 'bolt', label: null, url: 'https://bolt.new/p/1', role: 'current' }]);
+
+    await set(ALICE, id, 'bolt', null, '  ');
+    expect(await current(id)).toEqual([{ platform: 'bolt', label: null, url: null, role: 'current' }]);
+
+    await set(ALICE, id, 'other', ' Windsurf ', 'https://example.com/w');
+    const rows = await current(id);
+    expect(rows.find((r) => r.role === 'current')).toEqual({ platform: 'other', label: 'Windsurf', url: 'https://example.com/w', role: 'current' });
+    expect(rows.find((r) => r.role === 'past')?.platform).toBe('bolt');
+
+    await set(ALICE, id, null);
+    expect((await current(id)).every((r) => r.role === 'past')).toBe(true);
+  });
+
+  it('rejects a non-https link, an unnamed Other, and other users', async () => {
+    const id = await createProject(ALICE, 'platform-guard');
+    await expect(set(ALICE, id, 'codex', null, 'http://x.test')).rejects.toThrow();
+    await expect(set(ALICE, id, 'other', ' ')).rejects.toThrow(/other_has_label/);
+    await expect(set(BOB, id, 'codex')).rejects.toThrow(/GATE:NOT_FOUND/);
+    await expect(as('', () => db.exec(`set role anon; select public.set_current_platform(gen_random_uuid(), 'codex')`))).rejects.toThrow(
+      /permission denied/,
+    );
+  });
+});

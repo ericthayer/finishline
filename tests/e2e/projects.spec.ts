@@ -156,6 +156,59 @@ test('a failed save in edit keeps the form open with the reason', async ({ page 
   await expect(form.getByRole('alert')).toHaveText("That didn't save. Network down");
 });
 
+for (const theme of ['dark', 'light'] as const) {
+  test(`Edit shows the current platform and deep link (${theme})`, async ({ page }) => {
+    await page.addInitScript((t) => localStorage.setItem('fl-theme', t), theme);
+    await open(page);
+    await page.getByRole('button', { name: 'Edit DevLog' }).click();
+    const form = dialog(page, 'Edit “DevLog”');
+    await expect(form.getByRole('combobox', { name: 'Platform (optional)' })).toHaveValue('claude_code');
+    await expect(form.getByRole('textbox', { name: 'Deep link (optional)' })).toHaveValue('https://claude.ai/code/devlog');
+    await expect(form.getByRole('textbox', { name: 'Platform name' })).toBeHidden();
+    await form.getByRole('combobox', { name: 'Platform (optional)' }).selectOption('other');
+    await expect(form.getByRole('textbox', { name: 'Platform name' })).toBeVisible();
+    await axe(page);
+  });
+}
+
+test('a new project can start with a platform and deep link', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'New project', exact: true }).click();
+  const form = dialog(page, 'New project');
+  await form.getByRole('textbox', { name: 'Name' }).fill('Field notes');
+  await form.getByRole('combobox', { name: 'Platform (optional)' }).selectOption({ label: 'Lovable' });
+  await form.getByRole('textbox', { name: 'Deep link (optional)' }).fill('https://lovable.dev/projects/notes');
+  await form.getByRole('button', { name: 'Create project' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.getByRole('row', { name: /Field notes/ })).toContainText('Lovable');
+});
+
+test('Edit changes the platform, names Other, and checks the deep link', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Edit Univia' }).click();
+  const form = dialog(page, 'Edit “Univia”');
+  const platform = form.getByRole('combobox', { name: 'Platform (optional)' });
+  const link = form.getByRole('textbox', { name: 'Deep link (optional)' });
+  await expect(platform).toHaveValue('');
+
+  await link.fill('https://bolt.new/univia');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form.getByText('Pick the platform this link opens.')).toBeVisible();
+  await expect(link).toBeFocused();
+
+  await platform.selectOption('other');
+  await link.fill('http://windsurf.test/univia');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form.getByText('Name the platform, since it is not in the list.')).toBeVisible();
+  await expect(form.getByText('Use a link that starts with https://.')).toBeVisible();
+
+  await form.getByRole('textbox', { name: 'Platform name' }).fill('Windsurf');
+  await link.fill('https://windsurf.test/univia');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.getByRole('row', { name: /Univia/ })).toContainText('Windsurf');
+});
+
 test('Start moves a ready project to Active', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Start Univia' }).click();

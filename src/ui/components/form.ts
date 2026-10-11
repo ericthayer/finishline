@@ -12,25 +12,46 @@ export interface FieldOptions {
   maxLength?: number;
 }
 
-export interface Field {
+export type FieldControl = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+
+export interface Field<C extends FieldControl = HTMLInputElement | HTMLTextAreaElement> {
   wrap: HTMLElement;
-  control: HTMLInputElement | HTMLTextAreaElement;
+  control: C;
   /** Shows `message` in place of the help text; null restores the help text. */
   invalid(message: string | null): void;
   value(): string;
 }
 
 export function formField(o: FieldOptions): Field {
-  const id = `${o.name}-${uid()}`;
   const control = o.multiline ? el('textarea') : el('input');
-  control.id = id;
-  control.name = o.name;
-  control.value = o.value ?? '';
   if (control instanceof HTMLInputElement) {
     control.type = 'text';
     control.autocomplete = 'off';
   } else if (o.rows) control.rows = o.rows;
   if (o.maxLength) control.maxLength = o.maxLength;
+  return wrapField(control, o);
+}
+
+export interface SelectOptions extends Omit<FieldOptions, 'multiline' | 'rows' | 'maxLength'> {
+  options: readonly { value: string; label: string }[];
+}
+
+/** A native <select> with the same label, help and error wiring as formField. */
+export function selectField(o: SelectOptions): Field<HTMLSelectElement> {
+  const control = el('select');
+  for (const opt of o.options) {
+    const option = el('option', null, opt.label);
+    option.value = opt.value;
+    control.append(option);
+  }
+  return wrapField(control, o);
+}
+
+function wrapField<C extends FieldControl>(control: C, o: Pick<FieldOptions, 'name' | 'label' | 'help' | 'value'>): Field<C> {
+  const id = `${o.name}-${uid()}`;
+  control.id = id;
+  control.name = o.name;
+  control.value = o.value ?? '';
   const label = el('label', null, o.label);
   label.htmlFor = id;
   const small = el('small', null, o.help);
@@ -59,7 +80,7 @@ export function formField(o: FieldOptions): Field {
 export interface DialogContent {
   title: string;
   intro?: string;
-  fields: readonly Field[];
+  fields: readonly Field<FieldControl>[];
   submitLabel: string;
   danger?: boolean;
 }
