@@ -1,4 +1,4 @@
-import type { ProjectStatus } from './types.ts';
+import type { AgentPlatformId, PlatformLink, ProjectStatus } from './types.ts';
 import { nextActionMissing } from './gates.ts';
 
 // Rules the create and edit forms check before saving. Pure, so they are unit-tested.
@@ -17,6 +17,35 @@ export function shipUrlError(url: string): string | null {
   } catch {
     return SHIP_URL_COPY;
   }
+}
+
+export const PLATFORM_LABEL_COPY = 'Name the platform, since it is not in the list.';
+export const PLATFORM_LINK_NEEDS_PLATFORM_COPY = 'Pick the platform this link opens.';
+
+export interface PlatformFieldValues {
+  /** '' when no platform is picked. */
+  platform: AgentPlatformId | '';
+  label: string;
+  url: string;
+}
+
+/** Error copy per platform field, or null where the field is fine. */
+export function checkPlatformFields(values: PlatformFieldValues): { label: string | null; url: string | null } {
+  const url = values.url.trim();
+  return {
+    label: values.platform === 'other' && !values.label.trim() ? PLATFORM_LABEL_COPY : null,
+    url: url && !values.platform ? PLATFORM_LINK_NEEDS_PLATFORM_COPY : shipUrlError(url),
+  };
+}
+
+/** The checked form values as the record to save; null when no platform is picked. */
+export function toPlatformLink(values: PlatformFieldValues): PlatformLink | null {
+  if (!values.platform) return null;
+  return {
+    platform: values.platform,
+    label: values.platform === 'other' ? values.label.trim() || null : null,
+    url: values.url.trim() || null,
+  };
 }
 
 export interface ProjectFieldValues {

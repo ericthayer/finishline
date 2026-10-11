@@ -24,9 +24,9 @@ let listings: ProjectListing[] = params.has('empty')
   ? []
   : [
       ...withFullLanes,
-      { project: project({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active', focusRank: 1, nextAction: 'Fix the timezone bug in the weekly digest.', lastProgressAt: '2026-10-10T08:00:00Z' }), platform: 'claude_code', repo: 'ericthayer/devlog' },
+      { project: project({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active', focusRank: 1, nextAction: 'Fix the timezone bug in the weekly digest.', lastProgressAt: '2026-10-10T08:00:00Z' }), platform: { platform: 'claude_code', label: null, url: 'https://claude.ai/code/devlog' }, repo: 'ericthayer/devlog' },
       { project: project({ id: 'b', slug: 'univia', name: 'Univia', status: 'ready', nextAction: 'Write the first migration for courses.' }), platform: null, repo: null },
-      { project: project({ id: 'c', slug: 'stacker', name: 'Stacker', status: 'paused', reviewOn: '2026-09-01', nextAction: 'Decide: keep the Bolt prototype or rebuild.' }), platform: 'bolt', repo: null },
+      { project: project({ id: 'c', slug: 'stacker', name: 'Stacker', status: 'paused', reviewOn: '2026-09-01', nextAction: 'Decide: keep the Bolt prototype or rebuild.' }), platform: { platform: 'bolt', label: null, url: null }, repo: null },
       { project: project({ id: 'd', slug: 'portfolio', name: 'Portfolio v3', status: 'shipped', shippedAt: '2026-10-03T00:00:00Z' }), platform: null, repo: 'ericthayer/portfolio' },
       { project: project({ id: 'e', slug: 'old-idea', name: 'Old idea', status: 'archived', archivedReason: 'Superseded' }), platform: null, repo: null },
       { project: project({ id: 'f', slug: 'ideas-board', name: 'Ideas board', status: 'idea', nextAction: null }), platform: null, repo: null },
@@ -57,10 +57,10 @@ const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 
     if (params.has('fail')) throw new Error('Network down');
     return listings;
   },
-  async capture({ name, summary, outcome }: CaptureInput) {
+  async capture({ name, summary, outcome, platform }: CaptureInput) {
     if (params.has('save-fail')) throw new Error('Network down');
     const p = project({ id: `new-${++n}`, slug: `new-${n}`, name, summary: summary ?? null, outcome: outcome ?? null, status: 'idea' });
-    listings = [...listings, { project: p, platform: null, repo: null }];
+    listings = [...listings, { project: p, platform: platform ?? null, repo: null }];
     return p;
   },
   async move(id: string, input: MoveInput) {
@@ -91,6 +91,7 @@ const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 
       l.project.id === id
         ? {
             ...l,
+            platform: input.platform,
             project: {
               ...l.project,
               name: input.name,

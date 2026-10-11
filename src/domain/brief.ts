@@ -4,6 +4,7 @@ import type {
   Checkpoint,
   CommitSummary,
   Decision,
+  PlatformLink,
   Project,
   RepoLink,
   ShipCriterion,
@@ -24,6 +25,11 @@ export const PLATFORM_LABELS: Readonly<Record<AgentPlatformId, string>> = {
   replit: 'Replit',
   other: 'Other',
 };
+
+/** What to call a project's platform: the user's own name for 'other', else the list label. */
+export function platformName(link: Pick<PlatformLink, 'platform' | 'label'>): string {
+  return link.platform === 'other' && link.label ? link.label : PLATFORM_LABELS[link.platform];
+}
 
 export const BRIEF_DECISION_LIMIT = 5;
 export const BRIEF_COMMIT_LIMIT = 5;

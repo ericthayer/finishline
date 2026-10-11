@@ -96,6 +96,7 @@ export function showProjects(
             summary: project.summary ?? '',
             outcome: project.outcome ?? '',
             nextAction: project.nextAction ?? '',
+            platform: listing.platform,
           }),
         );
       } else if (action === 'start' || action === 'resume') {
@@ -149,8 +150,8 @@ export function showProjects(
   const nameOf = (id: string): string => find(id)?.project.name ?? 'Project';
 
   screen.create.addEventListener('fl-project-create-submit', (event) => {
-    const { name, summary, outcome } = (event as CustomEvent<CreateDetail>).detail;
-    repo.capture({ name, summary, outcome }).then(
+    const { name, summary, outcome, platform } = (event as CustomEvent<CreateDetail>).detail;
+    repo.capture({ name, summary, outcome, platform }).then(
       (project) => {
         screen.create.close();
         void settle(`“${project.name}” added as an idea.`);

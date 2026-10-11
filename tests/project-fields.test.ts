@@ -58,3 +58,33 @@ describe('reviewDateError', () => {
     for (const bad of ['', 'soon', '2026-13-01', '2026-02-30', '10/24/2026']) expect(reviewDateError(bad, '2026-10-10')).toBe(REVIEW_DATE_COPY);
   });
 });
+
+describe('platform fields', () => {
+  it('needs a name for Other, and a platform and https for a deep link', async () => {
+    const { checkPlatformFields, PLATFORM_LABEL_COPY, PLATFORM_LINK_NEEDS_PLATFORM_COPY, SHIP_URL_COPY } = await import(
+      '../src/domain/project-fields.ts'
+    );
+    expect(checkPlatformFields({ platform: '', label: '', url: '' })).toEqual({ label: null, url: null });
+    expect(checkPlatformFields({ platform: 'other', label: ' ', url: '' }).label).toBe(PLATFORM_LABEL_COPY);
+    expect(checkPlatformFields({ platform: '', label: '', url: 'https://bolt.new/x' }).url).toBe(PLATFORM_LINK_NEEDS_PLATFORM_COPY);
+    expect(checkPlatformFields({ platform: 'bolt', label: '', url: 'http://bolt.new/x' }).url).toBe(SHIP_URL_COPY);
+    expect(checkPlatformFields({ platform: 'bolt', label: '', url: 'https://bolt.new/x' })).toEqual({ label: null, url: null });
+  });
+
+  it('saves null for no platform, and keeps a label only for Other', async () => {
+    const { toPlatformLink } = await import('../src/domain/project-fields.ts');
+    expect(toPlatformLink({ platform: '', label: 'x', url: '' })).toBeNull();
+    expect(toPlatformLink({ platform: 'codex', label: 'stale', url: ' ' })).toEqual({ platform: 'codex', label: null, url: null });
+    expect(toPlatformLink({ platform: 'other', label: ' Windsurf ', url: 'https://w.test' })).toEqual({
+      platform: 'other',
+      label: 'Windsurf',
+      url: 'https://w.test',
+    });
+  });
+
+  it('names Other by its label', async () => {
+    const { platformName } = await import('../src/domain/brief.ts');
+    expect(platformName({ platform: 'other', label: 'Windsurf' })).toBe('Windsurf');
+    expect(platformName({ platform: 'claude_code', label: null })).toBe('Claude Code');
+  });
+});

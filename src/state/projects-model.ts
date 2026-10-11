@@ -1,4 +1,4 @@
-import { PLATFORM_LABELS } from '../domain/brief.ts';
+import { platformName } from '../domain/brief.ts';
 import { staleness } from '../domain/staleness.ts';
 import { OPEN_STATUSES, type ProjectStatus } from '../domain/types.ts';
 import type { ProjectListing } from '../data/projects.ts';
@@ -42,7 +42,7 @@ export function toProjectRows(listings: readonly ProjectListing[], now: Date): P
         href: `/p/${p.slug}`,
         status: p.status,
         ...(p.nextAction ? { next: p.nextAction } : {}),
-        ...(platform ? { platform: PLATFORM_LABELS[platform] } : {}),
+        ...(platform ? { platform: platformName(platform) } : {}),
         ...(s.level !== 'none'
           ? { stale: { level: s.level, days: s.days, ...(p.status === 'paused' ? { label: s.days < 0 ? 'until review' : 'past review date' } : {}) } }
           : {}),
