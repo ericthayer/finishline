@@ -3,7 +3,7 @@
 > Ideas are cheap. Finished projects are valuable.
 > **Less starting. More shipping.**
 
-**Status:** v0.3 (decisions 1–2 confirmed) · 2026-10-10 · Owner: Eric
+**Status:** v0.4 (decisions 1–2 and 6 confirmed) · 2026-10-11 · Owner: Eric
 **Sources:** merges Eric's *Product Development Plan v1.0* with Claude's spec v0.1. The differences and the call made on each are in [PLAN-COMPARISON.md](./PLAN-COMPARISON.md).
 **Repo state at writing:** empty (LICENSE only). Everything below is greenfield.
 **Naming:** "Finishlyne" is the product name (renamed from "Finishline" on 2026-10-10). Check domain, app-store and trademark conflicts before a public launch.
@@ -113,6 +113,7 @@ interface Checkpoint {                 // the Park note; latest one = "current s
   platform: AgentPlatformId | null;
   summary: string;                     // what happened
   nextActionSet: string;               // snapshot of next action at park time
+  source: 'manual' | 'ai_draft';       // 'ai_draft' = started from a suggested draft (§5), then edited and saved by you
   createdAt: string;
 }
 
@@ -265,6 +266,13 @@ One template for every platform in the MVP. Platform-specific variants come only
 
 A modal with three fields; focus starts on the first. **What happened** (required) · **Next action** (prefilled, required) · **New blocker** (optional). The platform defaults to the current one. Submitting writes a Checkpoint and a `checkpoint_added` event.
 
+**Draft it (Phase 2):** a `Draft it` button next to *What happened* asks the `ai-draft-checkpoint` function for a suggested summary and next action. The draft fills the fields as normal editable text; nothing is saved until you submit, and the Checkpoint records `source: 'ai_draft'`. Rules:
+
+- **Inputs:** the latest checkpoint, the current next action, and the project events since that checkpoint (criteria checked, decisions, blockers, status moves). From Phase 3, also the commits on the tracked branch since then. Never the agent instructions or anything outside the project.
+- **Output:** at most 3 sentences for *What happened* and one line for *Next action*, in plain words. It never invents work that isn't in the inputs; with no events since the last checkpoint, the button is disabled.
+- **Failure:** a timeout (8 s), a quota hit or an error leaves the fields as they were with an inline note. Park never depends on the model.
+- **The brief stays deterministic.** The handoff brief is still built by `src/domain/brief.ts` from your saved records, so what you hand an agent is always what you wrote or approved.
+
 ---
 
 ## 6. Stale detection
@@ -315,11 +323,12 @@ Computed when read, from `lastProgressAt`, `statusChangedAt`, `reviewOn` and `la
 | State | ~1 KB in-house signal store (getter/setter + subscribe) per feature | Explicit data flow |
 | Styling | CSS custom-property tokens, `@container` queries, light/dark | Tokens come from the design spec (§9, Phase 0) |
 | Routing | `URLPattern` + History API | Native, no dependency |
-| Backend | **Supabase**: Postgres + RLS, Auth (GitHub provider backed by the GitHub App), Edge Functions (Deno/TS) for the webhook receiver and GitHub proxy | Auth, database and functions in one managed service |
+| Backend | **Supabase**: Postgres + RLS, Auth (GitHub provider backed by the GitHub App), Edge Functions (Deno/TS) for the webhook receiver, GitHub proxy and AI draft | Auth, database and functions in one managed service |
 | Hosting | Netlify (static) | Preview deploy per branch |
+| AI | **Anthropic Messages API**, `claude-haiku-5-5`, called only from the `ai-draft-checkpoint` Edge Function. Key in Supabase function secrets as `ANTHROPIC_API_KEY`; never in the browser, the repo or a `VITE_*` var. The function checks the caller's JWT, reads the inputs under their RLS, and enforces a per-user daily cap (default 30 drafts) | Short, cheap, structured output; the key never leaves the server. Provider sits behind one function, so a switch is a one-file change |
 | Tests | Vitest (lifecycle gates, stale engine, brief builder), Playwright (capture, Resume, Park, disconnect), axe in CI | Gates and staleness are pure functions, so test them hard |
 
-**Cost:** $0 on free tiers. Supabase's free tier pauses projects after a week of inactivity, which would drop webhooks. Move to Pro ($25/mo) once you depend on it daily.
+**Cost:** $0 on free tiers, plus Anthropic usage for drafts (a few cents a day at the default cap). Supabase's free tier pauses projects after a week of inactivity, which would drop webhooks. Move to Pro ($25/mo) once you depend on it daily.
 
 **When React 19 is the better pick:** if a second contributor joins, or the orchestration platform becomes near-term. The domain layer is framework-free, so a switch only costs the view layer.
 
@@ -334,7 +343,7 @@ src/
     screens/   # overview, projects, project-detail, inbox, archive, settings
 supabase/
   migrations/
-  functions/   # github-webhook, github-sync
+  functions/   # github-webhook, github-sync, ai-draft-checkpoint
 ```
 
 ---
@@ -347,11 +356,11 @@ Each phase ends usable. Dogfood from the end of Phase 1; Finishlyne's own build 
 |---|---|---|
 | **0. Foundation** | **Design spec** (tokens, type, color, components; locked before UI work), Vite + TS scaffold, Supabase schema + RLS, GitHub App registered, sign-in, Netlify deploys, CI (typecheck, Vitest, axe) | A signed-in user reaches a protected, empty Overview on a deployed preview |
 | **1. Capture + lifecycle** | Quick capture, Inbox, Projects list with search/filter, project create/edit, all lifecycle gates, next action, ship checklist, platforms with deep links, WIP cap, Archive | The full lifecycle works without GitHub; every existing side project is entered |
-| **2. Resume** | Project detail (all 8 sections except GitHub data), decisions, blockers, agent instructions, Park, handoff brief + copy | Open a paused project → copied brief in < 60 s → continue in another agent |
+| **2. Resume** | Project detail (all 8 sections except GitHub data), decisions, blockers, agent instructions, Park, handoff brief + copy, **AI-drafted Park note** (`ai-draft-checkpoint` function, Draft it button, daily cap) | Open a paused project → copied brief in < 60 s → continue in another agent; Park with Draft it takes ≤ 15 s and still works with the key removed |
 | **3. GitHub** | App install, repo picker, link/unlink, tracked branch, issue/PR links, webhooks, activity in detail view, pushes update staleness, disconnect | A push from Claude Code on a `claude/*` branch freshens the project; disconnect leaves projects intact |
 | **4. Attention** | Stale engine, Overview "Needs a decision" lane, Review action, threshold and WIP settings | A 10-minute weekly review clears every "Needs a decision" item |
 | **5. Validation** | Privacy (cross-account RLS tests), mobile, keyboard and screen reader, empty/loading/error states, a real week of personal use | Every acceptance criterion in §10 passes against real projects |
-| **Later (evidence-gated)** | **Finishlyne MCP server** (agents read the brief and write checkpoints themselves; the likely first integration and the bridge to orchestration), repo context file, AI-drafted checkpoints, platform-specific brief variants | Only when a week of use shows the manual step is the real friction |
+| **Later (evidence-gated)** | **Finishlyne MCP server** (agents read the brief and write checkpoints themselves; the likely first integration and the bridge to orchestration), repo context file, platform-specific brief variants | Only when a week of use shows the manual step is the real friction |
 
 ---
 
@@ -377,7 +386,7 @@ Each phase ends usable. Dogfood from the end of Phase 1; Finishlyne's own build 
 - Teams, sharing, roles, billing, admin.
 - Integrations with any agent platform, and launching or orchestrating agents from Finishlyne.
 - Writing anything to GitHub, or storing code.
-- AI-generated summaries or checkpoints.
+- AI-generated briefs, summaries, or checkpoints saved without your edit. The Park draft (§5) is the one AI feature: suggested text you edit and save.
 - Gamification: streaks, scores, productivity metrics, counters that celebrate volume.
 - Time tracking. Notifications beyond in-app.
 
@@ -405,7 +414,8 @@ Avoid vanity metrics such as total ideas captured.
 | Becoming another backlog | One next action, WIP cap, no subtasks; Overview is a decision screen, not a list |
 | Overbuilding integrations | GitHub plus manual platform labels; the MCP server only on evidence |
 | Stale or misleading GitHub data | Cached facts kept apart from intent; sync time always shown; refresh when a project is opened |
-| Credential exposure | GitHub App, read-only, short-lived tokens kept server-side; explicit disconnect |
+| Credential exposure | GitHub App, read-only, short-lived tokens kept server-side; explicit disconnect. Anthropic key only in Supabase function secrets |
+| AI drafts drift from what happened or run up cost | Inputs limited to the project's own records; draft is never saved unedited; brief stays deterministic; per-user daily cap |
 | Resume context rot | Park required to pause; latest checkpoint is "current state" |
 | Unclear finish line | Ship checklist required to leave Idea |
 | Gates feel heavy | Capture stays a name only; gates apply only at Idea → Ready and later |
@@ -421,3 +431,4 @@ Avoid vanity metrics such as total ideas captured.
 | 3 | Stack | Default: **vanilla Web Components + Supabase + Netlify** |
 | 4 | Design spec timing | Default: **before Phase 1 UI**, as part of Phase 0 |
 | 5 | Tenancy | Default: **single-user** experience, RLS-isolated accounts |
+| 6 | AI provider and scope | **Decided 2026-10-11: Anthropic**, server-side only, for drafting Park notes in Phase 2. Gemini not supported for now |

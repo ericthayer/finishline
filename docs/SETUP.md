@@ -52,3 +52,10 @@ Supabase only redirects back to URLs it knows. In **Authentication → URL Confi
 | Redirect URLs | `http://localhost:5173/**` (local dev) and `https://*--ericthayer-dev.netlify.app/**` (deploy previews) |
 
 Then check end to end: open a deploy preview, click **Continue with GitHub**, approve the Finishlyne App, and you land on an empty Overview. That is Phase 0's done-when.
+
+## 5. Anthropic API key (Phase 2, for Park drafts)
+
+1. In the [Anthropic Console](https://console.anthropic.com), create a key named `finishlyne` and set a monthly spend limit on it.
+2. In Supabase → **Edge Functions → Secrets**, add it as `ANTHROPIC_API_KEY` (**secret**). CLI alternative: `npx supabase secrets set ANTHROPIC_API_KEY=…`.
+
+Never put it in `.env.local`, Netlify env vars or the repo; only the `ai-draft-checkpoint` function reads it.
