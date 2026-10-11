@@ -40,7 +40,10 @@ const criteria: Record<string, CriterionRecord[]> = {
     { id: 'c2', text: 'Docs written', position: 1, doneAt: null },
   ],
 };
-const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship'> = {
+const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship' | 'loadWipCap'> = {
+  async loadWipCap() {
+    return Number(params.get('cap') ?? 3);
+  },
   async listCriteria(id: string) {
     return criteria[id] ?? [];
   },

@@ -1,4 +1,5 @@
 import { planCriteria } from '../domain/gates.ts';
+import { DEFAULT_WIP_CAP } from '../domain/lifecycle.ts';
 import { slugify, uniqueSlug } from '../domain/slug.ts';
 import type { AgentPlatformId, Project } from '../domain/types.ts';
 import type { Backend } from './client.ts';
@@ -80,6 +81,9 @@ export interface ProjectsRepo {
   ship(id: string, input: ShipInput): Promise<void>;
   /** Start or Resume, or Pause with a checkpoint. Writes the checkpoint and review date in one call. */
   move(id: string, input: MoveInput): Promise<void>;
+  /** How many projects can be Active at once. The default until the user saves one. */
+  loadWipCap(): Promise<number>;
+  saveWipCap(cap: number): Promise<void>;
 }
 
 /** Error from a write. `message` is the raw database text; gate codes are parsed by callers. */
@@ -245,6 +249,17 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
           ? { p_project_id: id, p_to: 'active' }
           : { p_project_id: id, p_to: 'paused', p_next_action: input.nextAction.trim(), p_checkpoint_summary: input.checkpointSummary.trim() };
       const { error } = await db.rpc('transition_project', params);
+      if (error) fail(error);
+    },
+
+    async loadWipCap() {
+      const { data, error } = await db.from('user_settings').select('wip_cap').maybeSingle();
+      if (error) fail(error);
+      return (data as { wip_cap: number } | null)?.wip_cap ?? DEFAULT_WIP_CAP;
+    },
+
+    async saveWipCap(cap) {
+      const { error } = await db.from('user_settings').upsert({ wip_cap: cap }, { onConflict: 'user_id' });
       if (error) fail(error);
     },
 

@@ -221,3 +221,23 @@ describe('supabaseProjects ship', () => {
     expect(await supabaseProjects(backend).listCriteria('p')).toEqual([{ id: 'a', text: 'Docs', position: 0, doneAt: null }]);
   });
 });
+
+describe('supabaseProjects settings', () => {
+  it('reads the saved cap, or the default when none is saved yet', async () => {
+    const saved = fakeBackend([{ status: 200, body: { wip_cap: 5 } }]);
+    expect(await supabaseProjects(saved.backend).loadWipCap()).toBe(5);
+    const fresh = fakeBackend([{ status: 200, body: null }]);
+    expect(await supabaseProjects(fresh.backend).loadWipCap()).toBe(3);
+  });
+
+  it('saves the cap as one upsert on the user', async () => {
+    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
+    await supabaseProjects(backend).saveWipCap(4);
+    expect(calls).toEqual(['POST /rest/v1/user_settings?on_conflict=user_id {"wip_cap":4}']);
+  });
+
+  it('surfaces a rejected cap', async () => {
+    const { backend } = fakeBackend([{ status: 400, body: { code: '23514', message: 'check constraint violated' } }]);
+    await expect(supabaseProjects(backend).saveWipCap(11)).rejects.toThrow('check constraint');
+  });
+});
