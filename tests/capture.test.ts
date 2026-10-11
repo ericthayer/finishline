@@ -155,17 +155,34 @@ describe('supabaseProjects edits', () => {
     expect(calls[1]).toContain('"summary":null,"outcome":"Ship v1"');
   });
 
-  it('saves words only, trimmed, with blanks as NULL, and never writes status', async () => {
-    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
-    await supabaseProjects(backend).update('p', { name: '  Dev Log ', summary: ' ', outcome: 'Ship v1', nextAction: '' });
+  it('captures with a platform by setting it right after the insert', async () => {
+    const { backend, calls } = fakeBackend([
+      { status: 200, body: [] },
+      { status: 201, body: row('dev-log') },
+      { status: 204, body: null },
+    ]);
+    const platform = { platform: 'bolt' as const, label: null, url: 'https://bolt.new/x' };
+    const created = await supabaseProjects(backend).capture({ name: 'Dev Log', platform });
+    expect(calls[2]).toBe(
+      `POST /rest/v1/rpc/set_current_platform {"p_project_id":"${created.id}","p_platform":"bolt","p_label":null,"p_url":"https://bolt.new/x"}`,
+    );
+  });
+
+  it('saves words trimmed, with blanks as NULL, never writes status, then sets the platform', async () => {
+    const { backend, calls } = fakeBackend([
+      { status: 204, body: null },
+      { status: 204, body: null },
+    ]);
+    await supabaseProjects(backend).update('p', { name: '  Dev Log ', summary: ' ', outcome: 'Ship v1', nextAction: '', platform: null });
     expect(calls).toEqual([
       'PATCH /rest/v1/projects?id=eq.p {"name":"Dev Log","summary":null,"outcome":"Ship v1","next_action":null}',
+      'POST /rest/v1/rpc/set_current_platform {"p_project_id":"p","p_platform":null,"p_label":null,"p_url":null}',
     ]);
   });
 
   it('surfaces a database refusal', async () => {
     const { backend } = fakeBackend([{ status: 400, body: { code: 'P0001', message: 'GATE:MISSING_NEXT_ACTION' } }]);
-    await expect(supabaseProjects(backend).update('p', { name: 'Dev', summary: '', outcome: '', nextAction: '' })).rejects.toThrow(
+    await expect(supabaseProjects(backend).update('p', { name: 'Dev', summary: '', outcome: '', nextAction: '', platform: null })).rejects.toThrow(
       'GATE:MISSING_NEXT_ACTION',
     );
   });

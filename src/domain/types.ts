@@ -86,6 +86,15 @@ export interface ProjectPlatform {
   lastUsedAt: Timestamp | null;
 }
 
+/** The platform a project is on now, as the create and edit forms set it. */
+export interface PlatformLink {
+  platform: AgentPlatformId;
+  /** Required for 'other'; null for every listed platform. */
+  label: string | null;
+  /** https:// deep link into the platform, when set. */
+  url: string | null;
+}
+
 export interface Checkpoint {
   id: string;
   projectId: string;

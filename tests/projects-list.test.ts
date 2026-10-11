@@ -11,7 +11,7 @@ const listing = (overrides: Parameters<typeof project>[0], extra: Partial<Projec
 });
 
 const all: ProjectListing[] = [
-  listing({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active' }, { platform: 'claude_code', repo: 'ericthayer/devlog' }),
+  listing({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active' }, { platform: { platform: 'claude_code', label: null, url: null }, repo: 'ericthayer/devlog' }),
   listing({ id: 'b', slug: 'univia', name: 'Univia', status: 'ready', lastProgressAt: '2026-10-01T12:00:00Z' }),
   listing({ id: 'c', name: 'Stacker', status: 'paused', reviewOn: '2026-09-01' }),
   listing({ id: 'd', name: 'Portfolio v3', status: 'shipped', shippedAt: '2026-10-03T00:00:00Z' }),
