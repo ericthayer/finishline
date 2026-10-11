@@ -63,6 +63,12 @@ export function memoryRepo(seed: Idea[], fail: string | null): ProjectsRepo {
       const index = ideas.findIndex((i) => i.project.id === id);
       if (index >= 0) ideas.splice(index, 1);
     },
+    async reopen(id: string, nextAction: string) {
+      if (fail === 'reopen') throw new Error('GATE:NOT_ALLOWED');
+      const index = ideas.findIndex((i) => i.project.id === id);
+      const current = ideas[index];
+      if (current) ideas[index] = { ...current, project: { ...current.project, status: 'ready', nextAction, archivedAt: null, archivedReason: null } };
+    },
     async archive(id: string) {
       if (fail === 'archive') throw new Error('GATE:NOT_FOUND');
       const index = ideas.findIndex((i) => i.project.id === id);
