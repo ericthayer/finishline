@@ -1,8 +1,10 @@
 import type { ProjectStatus } from '../../domain/types.ts';
-import { DataElement, define, el } from './dom.ts';
+import { DataElement, define, el, emit } from './dom.ts';
 import { staleBadge, statusPill, type StaleLevel } from './status.ts';
 
 export interface ProjectRow {
+  /** Project id. When set, the row shows an Edit button that fires fl-project-edit {id}. */
+  id?: string;
   name: string;
   key?: string;
   href?: string;
@@ -53,6 +55,14 @@ export class ProjectTable extends DataElement<ProjectRow> {
       const link = el('a', null, r.name);
       link.href = r.href ?? '#';
       name.append(link, el('span', null, r.key ?? ''));
+      if (r.id) {
+        const id = r.id;
+        const edit = el('button', 'fl-btn fl-btn--quiet fl-table__edit', 'Edit');
+        edit.type = 'button';
+        edit.setAttribute('aria-label', `Edit ${r.name}`);
+        edit.addEventListener('click', () => emit(this, 'fl-project-edit', { id }));
+        name.append(edit);
+      }
       const nameCell = el('td');
       nameCell.append(name);
 

@@ -144,3 +144,29 @@ describe('supabaseProjects', () => {
     await expect(supabaseProjects(backend).archive('p', ' ')).rejects.toThrow('GATE:MISSING_ARCHIVE_REASON');
   });
 });
+
+describe('supabaseProjects edits', () => {
+  it('captures with an outcome when one is given', async () => {
+    const { backend, calls } = fakeBackend([
+      { status: 200, body: [] },
+      { status: 201, body: row('dev-log') },
+    ]);
+    await supabaseProjects(backend).capture({ name: 'Dev Log', summary: '', outcome: ' Ship v1 ' });
+    expect(calls[1]).toContain('"summary":null,"outcome":"Ship v1"');
+  });
+
+  it('saves words only, trimmed, with blanks as NULL, and never writes status', async () => {
+    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
+    await supabaseProjects(backend).update('p', { name: '  Dev Log ', summary: ' ', outcome: 'Ship v1', nextAction: '' });
+    expect(calls).toEqual([
+      'PATCH /rest/v1/projects?id=eq.p {"name":"Dev Log","summary":null,"outcome":"Ship v1","next_action":null}',
+    ]);
+  });
+
+  it('surfaces a database refusal', async () => {
+    const { backend } = fakeBackend([{ status: 400, body: { code: 'P0001', message: 'GATE:MISSING_NEXT_ACTION' } }]);
+    await expect(supabaseProjects(backend).update('p', { name: 'Dev', summary: '', outcome: '', nextAction: '' })).rejects.toThrow(
+      'GATE:MISSING_NEXT_ACTION',
+    );
+  });
+});

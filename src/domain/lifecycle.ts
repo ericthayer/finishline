@@ -46,6 +46,11 @@ type GatedProject = Pick<Project, 'status' | 'outcome' | 'nextAction'>;
 
 const NEEDS_NEXT_ACTION: ReadonlySet<ProjectStatus> = new Set(['ready', 'active', 'paused']);
 
+/** Ready, Active and Paused projects must say what happens next. */
+export function requiresNextAction(status: ProjectStatus): boolean {
+  return NEEDS_NEXT_ACTION.has(status);
+}
+
 function isBlank(value: string | null | undefined): boolean {
   return value == null || value.trim() === '';
 }
@@ -67,7 +72,7 @@ export function checkTransition(
   const failures: GateFailure[] = [];
   const nextAction = ctx.nextAction ?? project.nextAction;
 
-  if (NEEDS_NEXT_ACTION.has(to) && isBlank(nextAction)) {
+  if (requiresNextAction(to) && isBlank(nextAction)) {
     failures.push({ code: 'MISSING_NEXT_ACTION' });
   }
 

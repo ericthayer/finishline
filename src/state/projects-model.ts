@@ -28,6 +28,7 @@ export function toProjectRows(listings: readonly ProjectListing[], now: Date): P
     .map(({ project: p, platform, repo }): ProjectRow => {
       const s = staleness(p, now);
       return {
+        id: p.id,
         name: p.name,
         key: repo ?? p.slug,
         href: `/p/${p.slug}`,

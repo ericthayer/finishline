@@ -16,3 +16,5 @@ export * from './capture-dialog.ts';
 export * from './inbox-list.ts';
 export * from './promote-dialog.ts';
 export * from './archive-dialog.ts';
+export * from './create-project-dialog.ts';
+export * from './edit-project-dialog.ts';

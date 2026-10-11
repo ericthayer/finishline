@@ -1,6 +1,8 @@
 import type { ProjectStatus } from '../../domain/types.ts';
 import type { ProjectFilter } from '../../state/projects-model.ts';
 import { el } from '../components/dom.ts';
+import type { CreateProjectDialog } from '../components/create-project-dialog.ts';
+import type { EditProjectDialog } from '../components/edit-project-dialog.ts';
 import { icon } from '../components/icons.ts';
 import type { ProjectRow, ProjectTable } from '../components/table.ts';
 import { STATUS_LABEL } from '../components/status.ts';
@@ -19,6 +21,7 @@ export interface ProjectsView {
 }
 
 export interface ProjectsHandlers {
+  onEdit(id: string): void;
   onQuery(query: string): void;
   onToggle(status: ProjectStatus): void;
   onReset(): void;
@@ -28,12 +31,18 @@ export interface ProjectsHandlers {
 export interface ProjectsScreen {
   /** The screen root, so the controller can tell whether it is still on the page. */
   root: HTMLElement;
+  create: CreateProjectDialog;
+  edit: EditProjectDialog;
   show(view: ProjectsView): void;
   setLoading(): void;
   setError(message: string): void;
+  /** Says what just happened, visibly and to screen readers. */
+  announce(message: string): void;
+  /** Moves focus to the list heading after a save, since the row it came from may be gone. */
+  focusList(): void;
 }
 
-function create<T extends HTMLElement>(tag: string): T {
+function createEl<T extends HTMLElement>(tag: string): T {
   return document.createElement(tag) as T;
 }
 
@@ -41,16 +50,26 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   const head = el('div', 'fl-pagehead');
   const h1 = el('h1', null, 'Projects');
   h1.id = 'page-title';
-  head.append(h1);
+  const tools = el('div', 'fl-pagehead__tools');
+  const create = document.createElement('fl-create-project-dialog') as CreateProjectDialog;
+  const newButton = el('button', 'fl-btn fl-btn--primary');
+  newButton.type = 'button';
+  newButton.append(icon('plus'), document.createTextNode('New project'));
+  newButton.addEventListener('click', () => create.open());
+  tools.append(newButton);
+  head.append(h1, tools);
 
   const panel = el('section', 'fl-panel fl-panel--flush');
   panel.setAttribute('aria-labelledby', 'h-projects');
   const bar = el('div', 'fl-projects__bar');
   const h2 = el('h2', null, 'All projects');
   h2.id = 'h-projects';
+  h2.tabIndex = -1;
   const count = el('p', 'fl-projects__count');
   count.setAttribute('role', 'status');
   bar.append(h2, count);
+  const status = el('p', 'fl-projects__status');
+  status.setAttribute('aria-live', 'polite');
 
   const search = el('input');
   search.type = 'search';
@@ -83,18 +102,31 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   toolbar.append(form, group);
 
   const body = el('div', 'fl-projects__body');
-  const table = create<ProjectTable>('fl-project-table');
+  const table = createEl<ProjectTable>('fl-project-table');
   table.setAttribute('caption', 'Projects, sorted by name');
-  panel.append(bar, toolbar, body);
+  panel.addEventListener('fl-project-edit', (event) => {
+    const { id } = (event as CustomEvent<{ id: string }>).detail;
+    handlers.onEdit(id);
+  });
+  panel.append(bar, status, toolbar, body);
 
+  const edit = createEl<EditProjectDialog>('fl-edit-project-dialog');
   main.setAttribute('aria-labelledby', 'page-title');
-  main.replaceChildren(head, panel);
+  main.replaceChildren(head, panel, create, edit);
   document.title = 'Projects · Finishlyne';
 
   const box = (className: string): HTMLElement => el('div', `fl-empty fl-projects__empty ${className}`);
 
   return {
     root: panel,
+    create,
+    edit,
+    announce(message) {
+      status.textContent = message;
+    },
+    focusList() {
+      h2.focus();
+    },
     show(view) {
       for (const [status, chip] of chips) chip.setAttribute('aria-pressed', String(view.filter.statuses.has(status)));
       if (search.value !== view.filter.query) search.value = view.filter.query;
