@@ -5,6 +5,7 @@ import './ui/components/index.ts';
 
 import { bindCaptureShortcut, wireCapture } from './app/capture.ts';
 import { showInbox, type InboxController } from './app/inbox.ts';
+import { showProjects } from './app/projects.ts';
 import { startRouter, type Route } from './app/router.ts';
 import { mountShell, type Shell } from './app/shell.ts';
 import { createBackend, readConfig, type Backend } from './data/client.ts';
@@ -44,6 +45,7 @@ function start(root: HTMLElement, backend: Backend): void {
     inbox = null;
     if (route.name === 'overview') void showOverview(shell);
     else if (route.name === 'inbox') inbox = showInbox(shell.main, repo);
+    else if (route.name === 'projects') showProjects(shell.main, repo, new URLSearchParams(location.search).get('q') ?? '');
     else renderPlaceholder(shell.main, route.name);
   };
 

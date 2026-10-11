@@ -1,6 +1,6 @@
 import { planCriteria } from '../domain/gates.ts';
 import { slugify, uniqueSlug } from '../domain/slug.ts';
-import type { Project } from '../domain/types.ts';
+import type { AgentPlatformId, Project } from '../domain/types.ts';
 import type { Backend } from './client.ts';
 import { toProject, type ProjectRow } from './overview.ts';
 
@@ -24,6 +24,13 @@ export interface Idea {
   criteria: CriterionRecord[];
 }
 
+/** A project as the list shows it: its current platform and first linked repo, when set. */
+export interface ProjectListing {
+  project: Project;
+  platform: AgentPlatformId | null;
+  repo: string | null;
+}
+
 export interface PromoteInput {
   outcome: string;
   nextAction: string;
@@ -33,6 +40,8 @@ export interface PromoteInput {
 /** The seam the Inbox and capture talk to. Supabase in the app, in-memory in e2e fixtures. */
 export interface ProjectsRepo {
   listIdeas(): Promise<Idea[]>;
+  /** Every project the user owns, any status. */
+  listProjects(): Promise<ProjectListing[]>;
   capture(input: CaptureInput): Promise<Project>;
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
@@ -96,6 +105,29 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
         }
       }
       return projects.map((project) => ({ project, criteria: byProject.get(project.id) ?? [] }));
+    },
+
+    async listProjects() {
+      const [projects, platforms, repos] = await Promise.all([
+        db.from('projects').select('*').order('name'),
+        db.from('project_platforms').select('project_id, platform').eq('role', 'current'),
+        db.from('repo_links').select('project_id, full_name').order('linked_at'),
+      ]);
+      for (const r of [projects, platforms, repos]) if (r.error) fail(r.error);
+
+      const platformByProject = new Map<string, AgentPlatformId>();
+      for (const p of (platforms.data ?? []) as { project_id: string; platform: AgentPlatformId }[]) {
+        platformByProject.set(p.project_id, p.platform);
+      }
+      const repoByProject = new Map<string, string>();
+      for (const r of (repos.data ?? []) as { project_id: string; full_name: string }[]) {
+        if (!repoByProject.has(r.project_id)) repoByProject.set(r.project_id, r.full_name);
+      }
+      return ((projects.data ?? []) as ProjectRow[]).map((row) => ({
+        project: toProject(row),
+        platform: platformByProject.get(row.id) ?? null,
+        repo: repoByProject.get(row.id) ?? null,
+      }));
     },
 
     async capture({ name, summary }) {
