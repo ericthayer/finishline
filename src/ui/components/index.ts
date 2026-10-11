@@ -5,7 +5,6 @@ export * from './status.ts';
 export * from './kpi.ts';
 export * from './lanes.ts';
 export * from './charts.ts';
-export * from './feed.ts';
 export * from './table.ts';
 export * from './theme-toggle.ts';
 export * from './capture-form.ts';

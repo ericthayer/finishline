@@ -4,7 +4,7 @@ import '../../../src/ui/styles/screens.css';
 import '../../../src/ui/components/index.ts';
 import indexHtml from '../../../index.html?raw';
 import type { ProjectListing, ProjectsRepo } from '../../../src/data/projects.ts';
-import { mountShell } from '../../../src/app/shell.ts';
+import { fixtureShell } from './shell.ts';
 import { showProjects } from '../../../src/app/projects.ts';
 import { project } from '../../fixtures.ts';
 import type { CaptureInput, CriterionRecord, EditInput, MoveInput, ShipInput } from '../../../src/data/projects.ts';
@@ -107,10 +107,8 @@ const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 
 
 const host = document.getElementById('app');
 if (host) {
-  const shell = mountShell(host, { displayName: 'Eric' }, () => undefined);
-  shell.setRoute({ name: 'projects', params: {} });
-  shell.setAside(false);
-  void showProjects(shell.main, repo, params.get('q') ?? '', () => new Date('2026-10-10T12:00:00Z')).refresh().then(() => {
+  const shell = fixtureShell(host, 'projects', { capture: repo.capture, drawer: repo });
+  void showProjects(shell.main, repo, params.get('q') ?? '', shell.claimSearch, () => new Date('2026-10-10T12:00:00Z')).refresh().then(() => {
     document.body.dataset['ready'] = 'true';
   });
 }

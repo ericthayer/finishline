@@ -5,7 +5,7 @@ import '../../../src/ui/components/index.ts';
 import indexHtml from '../../../index.html?raw';
 import { bindCaptureShortcut, wireCapture } from '../../../src/app/capture.ts';
 import { showInbox } from '../../../src/app/inbox.ts';
-import { mountShell } from '../../../src/app/shell.ts';
+import { fixtureShell } from './shell.ts';
 import { project } from '../../fixtures.ts';
 import { memoryRepo } from './memory-repo.ts';
 
@@ -28,9 +28,7 @@ const now = (): Date => new Date('2026-10-10T12:00:00Z');
 
 const host = document.getElementById('app');
 if (host) {
-  const shell = mountShell(host, { displayName: 'Eric' }, () => undefined);
-  shell.setRoute({ name: 'inbox', params: {} });
-  shell.setAside(false);
+  const shell = fixtureShell(host, 'inbox');
   const inbox = showInbox(shell.main, repo, now);
   let captured = false;
   wireCapture(shell.capture.form, repo, () => {

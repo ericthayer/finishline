@@ -101,11 +101,10 @@ fl-inbox-list { display: block; }
 .fl-root { display: flex; flex-direction: column; overflow: hidden; }
 .fl-main { overflow: auto; }
 
-/* Shell without a top bar (Eric, 2026-10-11): rail | body. Search lives in each page head,
-   the avatar at the foot of the rail. Overrides the two-row grid in components.css. */
+/* Shell without a top bar (Eric, 2026-10-11): rail | body. Every page head is
+   title | search | actions; the avatar at the foot of the rail opens the account menu. Overrides the two-row grid in components.css. */
 .fl-app { grid-template-rows: minmax(0, 1fr); grid-template-areas: "rail body"; }
 .fl-rail__foot .fl-avatar { margin-top: var(--space-2); }
-.fl-pagehead > .fl-search { margin-inline-start: auto; width: clamp(240px, 18vw, 480px); }
 .fl-btn--icon { padding-inline: 0; width: var(--control-height); }
 
 /* Ship dialog: reuses the .fl-check list; these only reset the fieldset and style the note. */
@@ -134,3 +133,134 @@ fl-inbox-list { display: block; }
 }
 .fl-field select:focus-visible { outline: 2px solid var(--focus); outline-offset: 0; border-color: var(--focus); }
 .fl-field[data-invalid] select { border-color: var(--danger); }
+
+/* ── Page head: one pattern on every screen ─────────────── */
+.fl-pagehead { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); flex-wrap: nowrap; }
+.fl-pagehead > h1 { grid-column: 1; }
+.fl-pagehead > .fl-search { grid-column: 2; width: clamp(240px, 28vw, 640px); }
+.fl-pagehead > .fl-pagehead__tools { grid-column: 3; justify-self: end; }
+.fl-pagebar__actions { display: flex; align-items: center; gap: var(--space-2); }
+@container main (max-width: 720px) {
+  .fl-pagehead { grid-template-columns: minmax(0, 1fr) auto; }
+  .fl-pagehead > .fl-pagehead__tools { grid-column: 2; grid-row: 1; }
+  .fl-pagehead > .fl-search { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+}
+
+/* ── Account menu (avatar popover) ──────────────────────── */
+.fl-avatar--button { border: 0; padding: 0; cursor: pointer; }
+.fl-avatar--button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.fl-account {
+  position: fixed;
+  inset: auto auto var(--space-4) calc(var(--rail-width) + var(--space-2));
+  margin: 0;
+  width: clamp(220px, 14vw, 300px);
+  box-sizing: border-box;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--ink);
+  box-shadow: var(--shadow-dialog);
+}
+.fl-account__name { margin: 0; padding: var(--space-2) var(--space-3); font: 600 var(--text-body-size)/var(--text-body-leading) var(--font-sans); overflow-wrap: anywhere; }
+.fl-account__links { display: grid; padding-block: var(--space-1); border-block: 1px solid var(--line); }
+.fl-account__links :is(a, button) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--ink);
+  font: 500 var(--text-small-size)/1 var(--font-sans);
+  text-align: start;
+  text-decoration: none;
+  cursor: pointer;
+}
+.fl-account__links :is(a, button):hover, .fl-account__links a[aria-current="page"] { background: var(--surface-sunken); }
+.fl-account__links :is(a, button):focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+.fl-account__links fl-icon { width: var(--icon-size); height: var(--icon-size); color: var(--ink-muted); }
+.fl-account__version { margin: 0; padding: var(--space-2) var(--space-3) var(--space-1); color: var(--ink-muted); font: 400 var(--text-label-size)/var(--text-label-leading) var(--font-mono); }
+
+/* ── Side panel: pushes main over instead of covering it ── */
+.fl-app__body { grid-template-columns: minmax(0, 1fr) var(--aside-width); overflow: hidden; transition: grid-template-columns var(--duration-base) ease; }
+.fl-app__body > * { overflow: auto; }
+.fl-app__body[data-drawer="closed"] { grid-template-columns: minmax(0, 1fr) 0; }
+.fl-drawer { container: drawer / inline-size; min-width: 0; border-left: 1px solid var(--line); background: var(--surface); }
+.fl-app__body[data-drawer="closed"] > .fl-drawer { visibility: hidden; border-left-width: 0; transition: visibility 0s var(--duration-base); }
+.fl-drawer__inner { display: grid; align-content: start; gap: var(--space-4); padding: var(--space-6); min-width: calc(var(--aside-width) - 1px); box-sizing: border-box; }
+.fl-drawer__status { margin: 0; color: var(--ink-muted); font: 500 var(--text-label-size)/1.4 var(--font-sans); }
+.fl-drawer__status:empty { display: none; }
+.fl-drawer__lead { margin: 0; color: var(--ink); font: 500 var(--text-body-size)/var(--text-body-leading) var(--font-sans); }
+.fl-drawer__list, .fl-drawer__grid { display: grid; gap: var(--space-4); margin: 0; padding: 0; list-style: none; }
+.fl-drawer__empty { padding: var(--space-4) 0; }
+.fl-commit { display: grid; gap: var(--space-2); }
+.fl-commit__nudge { display: flex; align-items: flex-start; gap: var(--space-2); margin: 0; color: var(--ink-muted); font: 400 var(--text-small-size)/var(--text-small-leading) var(--font-sans); }
+.fl-commit__nudge fl-icon { flex: none; width: 1.1em; height: 1.1em; margin-top: 0.15em; }
+.fl-commit__nudge[data-level="stale"] fl-icon { color: var(--warning); }
+.fl-commit__nudge[data-level="cold"] { color: var(--ink); }
+.fl-commit__nudge[data-level="cold"] fl-icon { color: var(--danger); }
+.fl-drawer__project { display: grid; gap: var(--space-1); min-width: 0; }
+/* The yellow stripe marks committed lanes only, so open-project cards drop it. */
+.fl-drawer__project .fl-card::before { display: none; }
+.fl-drawer__project .fl-card { padding-left: var(--space-4); }
+.fl-drawer__actions { display: flex; flex-wrap: wrap; gap: 0 var(--space-2); }
+@container drawer (min-width: 460px) { .fl-drawer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1180px) {
+  .fl-app__body { grid-template-columns: minmax(0, 1fr) var(--aside-width); overflow: hidden; }
+  .fl-app__body > * { overflow: auto; }
+}
+@media (max-width: 720px) {
+  .fl-app__body, .fl-app__body[data-drawer="closed"] { grid-template-columns: minmax(0, 1fr); }
+  .fl-drawer { position: fixed; inset: 0 0 0 auto; width: min(100vw - var(--rail-width), 360px); z-index: 2; box-shadow: var(--shadow-dialog); }
+  .fl-drawer__inner { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-app__body, .fl-app__body[data-drawer="closed"] > .fl-drawer { transition: none; }
+}
+
+/* ── Tabs ───────────────────────────────────────────────── */
+.fl-tabs { display: flex; gap: var(--space-1); border-bottom: 1px solid var(--line); }
+.fl-tabs__tab {
+  position: relative;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  font: 500 var(--text-small-size)/1 var(--font-sans);
+  cursor: pointer;
+}
+.fl-tabs__tab:hover { color: var(--ink); }
+.fl-tabs__tab[aria-selected="true"] { color: var(--ink); }
+.fl-tabs__tab[aria-selected="true"]::after { content: ""; position: absolute; inset: auto 0 -1px; height: 2px; background: var(--ink); }
+.fl-tabs__tab:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; border-radius: var(--radius-xs); }
+.fl-tabs__panel { display: grid; align-content: start; gap: var(--space-4); }
+.fl-tabs__panel[hidden] { display: none; }
+.fl-tabs__panel:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; border-radius: var(--radius-xs); }
+
+/* ── Recent activity timeline ───────────────────────────── */
+.fl-timeline { display: grid; gap: var(--space-6); padding: var(--space-6); }
+.fl-timeline__day { display: grid; gap: var(--space-3); }
+.fl-timeline__date { margin: 0; font: var(--text-title-weight) var(--text-title-size)/var(--text-title-leading) var(--font-sans); }
+.fl-timeline__list { position: relative; display: grid; margin: 0; padding: 0; list-style: none; }
+.fl-timeline__list::before { content: ""; position: absolute; inset: var(--space-4) auto var(--space-4) calc(var(--control-height) / 2 - 0.5px); width: 1px; background: var(--line); }
+.fl-timeline__item { position: relative; display: grid; grid-template-columns: var(--control-height) minmax(0, 1fr) auto; align-items: start; gap: var(--space-3); padding: var(--space-2) 0; }
+.fl-timeline__mark { display: grid; place-items: center; width: var(--control-height); height: var(--control-height); border: 1px solid var(--line); border-radius: 50%; background: var(--surface-raised); color: var(--ink-muted); box-sizing: border-box; }
+.fl-timeline__mark fl-icon { width: calc(var(--icon-size) * 0.85); height: calc(var(--icon-size) * 0.85); }
+.fl-timeline__item[data-tone="positive"] .fl-timeline__mark { color: var(--positive); }
+.fl-timeline__item[data-tone="warning"] .fl-timeline__mark { color: var(--warning); }
+.fl-timeline__item[data-tone="danger"] .fl-timeline__mark { color: var(--danger); }
+.fl-timeline__item[data-tone="signal"] .fl-timeline__mark { color: var(--status-active); }
+.fl-timeline__title { margin: 0; padding-top: calc((var(--control-height) - 1lh) / 2); font-weight: 500; overflow-wrap: anywhere; }
+.fl-timeline__title a { color: inherit; text-decoration: none; }
+.fl-timeline__title a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fl-timeline__meta { margin: 2px 0 0; color: var(--ink-muted); font: 400 var(--text-small-size)/var(--text-small-leading) var(--font-sans); }
+.fl-timeline__key { padding-top: calc((var(--control-height) - 1lh) / 2); color: var(--ink-muted); font: 400 var(--text-label-size)/1.6 var(--font-mono); white-space: nowrap; }
+@container main (max-width: 560px) {
+  .fl-timeline__item { grid-template-columns: var(--control-height) minmax(0, 1fr); }
+  .fl-timeline__key { grid-column: 2; padding-top: 0; }
+}

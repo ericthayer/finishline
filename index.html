@@ -27,30 +27,39 @@
             <a class="fl-iconbtn" href="/archive" aria-label="Archive" data-route="archive"><fl-icon name="shipped"></fl-icon></a>
           </nav>
           <div class="fl-rail__foot">
-            <a class="fl-iconbtn" href="/settings" aria-label="Settings" data-route="settings"><fl-icon name="settings"></fl-icon></a>
             <fl-theme-toggle></fl-theme-toggle>
-            <button class="fl-iconbtn" type="button" aria-label="Sign out" data-action="sign-out"><fl-icon name="logout"></fl-icon></button>
-            <span class="fl-avatar" data-slot="avatar" role="img"></span>
+            <button class="fl-avatar fl-avatar--button" type="button" data-slot="avatar" popovertarget="fl-account"></button>
           </div>
         </aside>
+        <div class="fl-account" id="fl-account" popover data-slot="account">
+          <p class="fl-account__name" data-slot="account-name"></p>
+          <nav class="fl-account__links" aria-label="Account">
+            <a href="/activity" data-route="activity"><fl-icon name="activity"></fl-icon>Recent activity</a>
+            <a href="/settings" data-route="settings"><fl-icon name="settings"></fl-icon>Settings</a>
+            <button type="button" data-action="sign-out"><fl-icon name="logout"></fl-icon>Sign out</button>
+          </nav>
+          <p class="fl-account__version" data-slot="version"></p>
+        </div>
         <div class="fl-app__body" data-slot="body">
           <main class="fl-main" id="main" tabindex="-1" data-slot="main"></main>
-          <aside class="fl-aside" aria-labelledby="h-activity" data-slot="aside">
-            <div class="fl-aside__head"><h2 id="h-activity">Recent activity</h2></div>
-            <div data-slot="feed"></div>
-          </aside>
+          <aside class="fl-drawer" id="fl-drawer" aria-label="Side panel" data-slot="drawer"></aside>
         </div>
         <fl-capture-dialog data-slot="capture"></fl-capture-dialog>
+        <fl-create-project-dialog data-slot="create"></fl-create-project-dialog>
       </div>
     </template>
 
-    <!-- Global search. The shell places it in each screen's page head, after the title. -->
-    <template id="tpl-search">
+    <!-- Header search and actions. The shell adds them to every screen's page head. -->
+    <template id="tpl-pagebar">
       <form class="fl-search" role="search" action="/projects">
         <fl-icon name="search"></fl-icon>
         <label class="fl-sr" for="fl-q">Search projects</label>
         <input id="fl-q" name="q" type="search" placeholder="Search projects" autocomplete="off" />
       </form>
+      <div class="fl-pagebar__actions">
+        <button class="fl-btn fl-btn--primary fl-btn--icon" type="button" aria-label="New project" title="New project" data-action="new-project"><fl-icon name="plus"></fl-icon></button>
+        <button class="fl-btn fl-btn--primary fl-btn--icon" type="button" aria-label="Side panel" title="Side panel" aria-controls="fl-drawer" aria-expanded="true" data-action="drawer"><fl-icon name="panelRight"></fl-icon></button>
+      </div>
     </template>
 
     <template id="tpl-signin">

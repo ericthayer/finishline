@@ -32,6 +32,27 @@ for (const theme of ['dark', 'light'] as const) {
       await noHorizontalScroll(page);
     });
 
+    test('Overview with the side panel open', async ({ page }) => {
+      await page.goto('/tests/e2e/fixtures/overview.html?drawer');
+      await expect(page.getByRole('tab', { name: 'Committed' })).toBeVisible();
+      await expect(page.locator('.fl-commit')).toHaveCount(2);
+      await axe(page);
+      await page.getByRole('tab', { name: 'Projects' }).click();
+      await expect(page.locator('.fl-drawer__project').first()).toBeVisible();
+      await axe(page);
+      await noHorizontalScroll(page);
+    });
+
+    test('account menu and Recent activity', async ({ page }) => {
+      await page.goto('/tests/e2e/fixtures/activity.html');
+      await expect(page.getByRole('heading', { name: 'Today' })).toBeVisible();
+      await axe(page);
+      await page.getByRole('button', { name: 'Account: Eric' }).click();
+      await expect(page.getByRole('navigation', { name: 'Account' })).toBeVisible();
+      await axe(page);
+      await noHorizontalScroll(page);
+    });
+
     test('Overview with no projects', async ({ page }) => {
       await page.goto('/tests/e2e/fixtures/overview.html?empty');
       await expect(page.getByRole('heading', { name: 'No projects yet' })).toBeVisible();
@@ -44,17 +65,4 @@ test('explains missing configuration instead of failing silently', async ({ page
   await page.goto('/');
   await page.getByRole('button', { name: 'Continue with GitHub' }).click();
   await expect(page.getByRole('alert')).toContainText('Supabase is not configured');
-});
-
-test('the shell has no top bar: search sits in the page head, the avatar at the foot of the rail', async ({ page }) => {
-  await page.goto('/tests/e2e/fixtures/overview.html');
-  await expect(page.locator('body[data-ready]')).toBeAttached();
-  await expect(page.locator('.fl-topbar')).toHaveCount(0);
-  await expect(page.locator('.fl-pagehead > h1 + .fl-search')).toBeVisible();
-  await expect(page.getByRole('link', { name: 'New project' })).toBeVisible();
-  await expect(page.locator('.fl-rail__foot').getByRole('img', { name: 'Signed in as Eric' })).toBeVisible();
-
-  await page.goto('/tests/e2e/fixtures/projects.html');
-  await expect(page.locator('body[data-ready]')).toBeAttached();
-  await expect(page.getByRole('searchbox', { name: 'Search projects', exact: true })).toHaveCount(0);
 });

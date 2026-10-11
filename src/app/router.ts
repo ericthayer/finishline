@@ -1,6 +1,6 @@
 // History API router with a tiny path matcher (`/p/:slug`). No dependency.
 
-export type RouteName = 'overview' | 'projects' | 'project' | 'inbox' | 'archive' | 'settings' | 'not-found';
+export type RouteName = 'overview' | 'projects' | 'project' | 'inbox' | 'archive' | 'activity' | 'settings' | 'not-found';
 
 export interface Route {
   name: RouteName;
@@ -13,6 +13,7 @@ const TABLE: readonly [RouteName, string][] = [
   ['project', '/p/:slug'],
   ['inbox', '/inbox'],
   ['archive', '/archive'],
+  ['activity', '/activity'],
   ['settings', '/settings'],
 ];
 

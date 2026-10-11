@@ -37,7 +37,7 @@ for (const theme of ['dark', 'light'] as const) {
 
     test('no matches', async ({ page }) => {
       await open(page);
-      await page.getByRole('searchbox', { name: 'Search projects by name' }).fill('nothing like this');
+      await page.getByRole('searchbox', { name: 'Search projects', exact: true }).fill('nothing like this');
       await expect(page.getByRole('heading', { name: 'Nothing matches' })).toBeVisible();
       await axe(page);
     });
@@ -46,7 +46,7 @@ for (const theme of ['dark', 'light'] as const) {
 
 test('searching narrows the list and keeps focus in the field', async ({ page }) => {
   await open(page);
-  const search = page.getByRole('searchbox', { name: 'Search projects by name' });
+  const search = page.getByRole('searchbox', { name: 'Search projects', exact: true });
   await search.click();
   await search.pressSequentially('STACK');
   await expect(search).toBeFocused();
@@ -75,9 +75,9 @@ test('status chips toggle closed projects in and out', async ({ page }) => {
   await expect(rows(page)).toHaveCount(4);
 });
 
-test('the top-bar search arrives prefilled', async ({ page }) => {
+test('the header search arrives prefilled', async ({ page }) => {
   await open(page, '?q=dev');
-  await expect(page.getByRole('searchbox', { name: 'Search projects by name' })).toHaveValue('dev');
+  await expect(page.getByRole('searchbox', { name: 'Search projects', exact: true })).toHaveValue('dev');
   await expect(rows(page)).toHaveCount(1);
 });
 
