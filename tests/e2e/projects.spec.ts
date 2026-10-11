@@ -86,3 +86,72 @@ test('a failed load offers a retry', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Projects did not load' })).toBeVisible();
   await axe(page);
 });
+
+const dialog = (page: Page, name: string) => page.getByRole('dialog', { name, exact: true });
+
+test('New project opens a form that asks for a name', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'New project', exact: true }).click();
+  const form = dialog(page, 'New project');
+  await expect(form).toBeVisible();
+  await expect(form.getByRole('textbox', { name: 'Name' })).toBeFocused();
+  await axe(page);
+  await form.getByRole('button', { name: 'Create project' }).click();
+  await expect(form.getByRole('textbox', { name: 'Name' })).toHaveAttribute('aria-invalid', 'true');
+  await expect(form.getByText('Give it a name. Anything you will recognize later works.')).toBeVisible();
+  await expect(form).toBeVisible();
+});
+
+test('a new project lands in the list as an idea', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'New project', exact: true }).click();
+  const form = dialog(page, 'New project');
+  await form.getByRole('textbox', { name: 'Name' }).fill('Field notes');
+  await form.getByRole('textbox', { name: 'Outcome (optional)' }).fill('A notes app I actually use');
+  await form.getByRole('button', { name: 'Create project' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.getByRole('row', { name: /Field notes/ })).toBeVisible();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“Field notes” added as an idea.');
+  await expect(page.getByRole('heading', { name: 'All projects' })).toBeFocused();
+});
+
+test('a failed create keeps the form open with the reason', async ({ page }) => {
+  await open(page, '?save-fail');
+  await page.getByRole('button', { name: 'New project', exact: true }).click();
+  const form = dialog(page, 'New project');
+  await form.getByRole('textbox', { name: 'Name' }).fill('Field notes');
+  await form.getByRole('button', { name: 'Create project' }).click();
+  await expect(form.getByRole('alert')).toHaveText("That didn't save. Network down");
+  await expect(form.getByRole('button', { name: 'Create project' })).toBeEnabled();
+});
+
+test('Edit opens with the current words and saves them', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Edit DevLog' }).click();
+  const form = dialog(page, 'Edit “DevLog”');
+  await expect(form.getByRole('textbox', { name: 'Next action (optional for ideas)' })).toHaveValue('Fix the timezone bug in the weekly digest.');
+  await axe(page);
+  await form.getByRole('textbox', { name: 'Outcome (optional)' }).fill('The digest is right every Monday');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“DevLog” saved.');
+  await expect(page.getByRole('row', { name: /DevLog/ })).toBeVisible();
+});
+
+test('an active project cannot lose its next action in the edit form', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Edit DevLog' }).click();
+  const form = dialog(page, 'Edit “DevLog”');
+  await form.getByRole('textbox', { name: 'Next action (optional for ideas)' }).fill('');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form.getByText('Active projects need a next action. Write the first concrete step.')).toBeVisible();
+  await expect(form).toBeVisible();
+});
+
+test('a failed save in edit keeps the form open with the reason', async ({ page }) => {
+  await open(page, '?save-fail');
+  await page.getByRole('button', { name: 'Edit Univia' }).click();
+  const form = dialog(page, 'Edit “Univia”');
+  await form.getByRole('button', { name: 'Save changes' }).click();
+  await expect(form.getByRole('alert')).toHaveText("That didn't save. Network down");
+});

@@ -7,9 +7,19 @@ import { toProject, type ProjectRow } from './overview.ts';
 // Project writes for capture and triage. RLS scopes every query to the signed-in user;
 // status changes go through public.transition_project(), which re-checks every gate.
 
+/** A new idea. Creating always starts at Idea; the other fields are optional context. */
 export interface CaptureInput {
   name: string;
   summary?: string;
+  outcome?: string;
+}
+
+/** Words-only edit. Status is never written here; it moves through promote and archive. */
+export interface EditInput {
+  name: string;
+  summary: string;
+  outcome: string;
+  nextAction: string;
 }
 
 export interface CriterionRecord {
@@ -43,6 +53,8 @@ export interface ProjectsRepo {
   /** Every project the user owns, any status. */
   listProjects(): Promise<ProjectListing[]>;
   capture(input: CaptureInput): Promise<Project>;
+  /** Saves name, summary, outcome and next action. The slug, and so the link, never changes. */
+  update(id: string, input: EditInput): Promise<void>;
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
   archive(id: string, reason: string): Promise<void>;
@@ -68,6 +80,8 @@ function fail(error: DbError): never {
 }
 
 const UNIQUE_VIOLATION = '23505';
+/** Form fields are text; the database wants NULL for "not set". */
+const orNull = (value: string | undefined): string | null => value?.trim() || null;
 const CAPTURE_ATTEMPTS = 3;
 
 interface CriterionRow {
@@ -130,7 +144,7 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
       }));
     },
 
-    async capture({ name, summary }) {
+    async capture({ name, summary, outcome }) {
       const base = slugify(name);
       let last: DbError | null = null;
       // Two tabs can race for the same slug; the unique index decides and we take the next one.
@@ -138,7 +152,7 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
         const slug = uniqueSlug(base, await takenSlugs(base));
         const { data, error } = await db
           .from('projects')
-          .insert({ name: name.trim(), slug, summary: summary?.trim() || null })
+          .insert({ name: name.trim(), slug, summary: orNull(summary), outcome: orNull(outcome) })
           .select('*')
           .single();
         if (!error) return toProject(data as ProjectRow);
@@ -146,6 +160,14 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
         last = error;
       }
       return fail(last ?? { message: 'Could not capture this idea.', code: 'unknown' });
+    },
+
+    async update(id, { name, summary, outcome, nextAction }) {
+      const saved = await db
+        .from('projects')
+        .update({ name: name.trim(), summary: orNull(summary), outcome: orNull(outcome), next_action: orNull(nextAction) })
+        .eq('id', id);
+      if (saved.error) fail(saved.error);
     },
 
     async promote(id, { outcome, nextAction, criteria }) {

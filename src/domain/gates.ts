@@ -1,4 +1,4 @@
-import { type GateCode, type GateFailure } from './lifecycle.ts';
+import { requiresNextAction, type GateCode, type GateFailure } from './lifecycle.ts';
 import type { ProjectStatus } from './types.ts';
 
 // Gates explain themselves (DESIGN principle 3): every failure says what to add or do.
@@ -57,6 +57,12 @@ export function explainGate(failure: GateFailure | ServerGate, to: ProjectStatus
     case 'NOT_FOUND':
       return 'This project no longer exists. Refresh to see the latest.';
   }
+}
+
+/** Edit-form rule for the next action, in the same words as the gate. Null when it is fine. */
+export function nextActionMissing(status: ProjectStatus, nextAction: string): string | null {
+  if (!requiresNextAction(status) || nextAction.trim()) return null;
+  return `${LABEL[status]} projects need a next action. Write the first concrete step.`;
 }
 
 /** Reads `GATE:A,B` from a database error message; null when it isn't a gate error. */

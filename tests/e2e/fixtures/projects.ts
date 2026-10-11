@@ -7,12 +7,13 @@ import type { ProjectListing, ProjectsRepo } from '../../../src/data/projects.ts
 import { mountShell } from '../../../src/app/shell.ts';
 import { showProjects } from '../../../src/app/projects.ts';
 import { project } from '../../fixtures.ts';
+import type { CaptureInput, EditInput } from '../../../src/data/projects.ts';
 
 const parsed = new DOMParser().parseFromString(indexHtml, 'text/html');
 for (const tpl of parsed.querySelectorAll('template')) document.body.append(document.importNode(tpl, true));
 
 const params = new URLSearchParams(location.search);
-const listings: ProjectListing[] = params.has('empty')
+let listings: ProjectListing[] = params.has('empty')
   ? []
   : [
       { project: project({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active', focusRank: 1, nextAction: 'Fix the timezone bug in the weekly digest.', lastProgressAt: '2026-10-10T08:00:00Z' }), platform: 'claude_code', repo: 'ericthayer/devlog' },
@@ -23,10 +24,34 @@ const listings: ProjectListing[] = params.has('empty')
       { project: project({ id: 'f', slug: 'ideas-board', name: 'Ideas board', status: 'idea', nextAction: null }), platform: null, repo: null },
     ];
 
-const repo: Pick<ProjectsRepo, 'listProjects'> = {
+let n = 0;
+const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update'> = {
   async listProjects() {
     if (params.has('fail')) throw new Error('Network down');
     return listings;
+  },
+  async capture({ name, summary, outcome }: CaptureInput) {
+    if (params.has('save-fail')) throw new Error('Network down');
+    const p = project({ id: `new-${++n}`, slug: `new-${n}`, name, summary: summary ?? null, outcome: outcome ?? null, status: 'idea' });
+    listings = [...listings, { project: p, platform: null, repo: null }];
+    return p;
+  },
+  async update(id: string, input: EditInput) {
+    if (params.has('save-fail')) throw new Error('Network down');
+    listings = listings.map((l) =>
+      l.project.id === id
+        ? {
+            ...l,
+            project: {
+              ...l.project,
+              name: input.name,
+              summary: input.summary || null,
+              outcome: input.outcome || null,
+              nextAction: input.nextAction || null,
+            },
+          }
+        : l,
+    );
   },
 };
 
