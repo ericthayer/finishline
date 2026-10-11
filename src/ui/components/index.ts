@@ -1,4 +1,5 @@
-// Importing this module registers every Finishline custom element.
+// Importing this module registers the eagerly loaded Finishline custom elements.
+// Dialogs register on demand through ./lazy.ts.
 export * from './icons.ts';
 export * from './status.ts';
 export * from './kpi.ts';
@@ -14,9 +15,3 @@ export * from './park-dialog.ts';
 export * from './capture-form.ts';
 export * from './capture-dialog.ts';
 export * from './inbox-list.ts';
-export * from './promote-dialog.ts';
-export * from './archive-dialog.ts';
-export * from './create-project-dialog.ts';
-export * from './edit-project-dialog.ts';
-export * from './pause-project-dialog.ts';
-export * from './ship-project-dialog.ts';
