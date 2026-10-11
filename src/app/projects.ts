@@ -9,26 +9,30 @@ import {
 } from '../state/projects-model.ts';
 import { loadDialog } from '../ui/components/lazy.ts';
 import type { ArchiveDetail } from '../ui/components/archive-dialog.ts';
-import type { CreateDetail } from '../ui/components/create-project-dialog.ts';
 import type { EditDetail } from '../ui/components/edit-project-dialog.ts';
 import type { PauseDetail } from '../ui/components/pause-project-dialog.ts';
 import type { ShipDetail } from '../ui/components/ship-project-dialog.ts';
 import type { RowAction } from '../ui/components/table.ts';
 import { mountProjects } from '../ui/screens/projects.ts';
 import type { ProjectStatus } from '../domain/types.ts';
+import { announceChange, onChange } from './changes.ts';
 import { saveError } from './errors.ts';
 
 export interface ProjectsController {
   refresh(): Promise<void>;
 }
 
-export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship' | 'loadWipCap'>;
+export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship' | 'loadWipCap'>;
 
-/** Mounts the Projects list into `main`. `initialQuery` comes from the top-bar search (`?q=`). */
+/** The header search, claimed by this screen so it filters in place. */
+export type ClaimSearch = (onQuery: (query: string) => void, initial: string) => void;
+
+/** Mounts the Projects list into `main`. `initialQuery` comes from the header search (`?q=`). */
 export function showProjects(
   main: HTMLElement,
   repo: ProjectsSource,
   initialQuery: string,
+  claimSearch: ClaimSearch,
   now: () => Date = () => new Date(),
 ): ProjectsController {
   let filter: ProjectFilter = { query: initialQuery, statuses: DEFAULT_STATUSES };
@@ -120,10 +124,6 @@ export function showProjects(
         void loadDialog('fl-archive-dialog').then(() => screen.archive.confirm({ id, name: project.name }));
       }
     },
-    onQuery(query) {
-      filter = { ...filter, query };
-      paint();
-    },
     onToggle(status: ProjectStatus) {
       const statuses = new Set(filter.statuses);
       if (statuses.has(status)) statuses.delete(status);
@@ -133,6 +133,7 @@ export function showProjects(
     },
     onReset() {
       filter = { query: '', statuses: DEFAULT_STATUSES };
+      claimSearch(onQuery, '');
       paint();
     },
     onRetry() {
@@ -140,25 +141,28 @@ export function showProjects(
     },
   });
 
+  const onQuery = (query: string): void => {
+    filter = { ...filter, query };
+    paint();
+  };
+  claimSearch(onQuery, initialQuery);
+
   // A save reloads the list and then moves focus to it, because the dialog's opener may be gone.
-  const settle = async (message: string): Promise<void> => {
+  const settle = async (message: string, origin: 'projects' | 'create' = 'projects'): Promise<void> => {
     screen.announce(message);
+    if (origin === 'projects') announceChange({ origin });
     await refresh();
     screen.focusList();
   };
 
-  const nameOf = (id: string): string => find(id)?.project.name ?? 'Project';
-
-  screen.create.addEventListener('fl-project-create-submit', (event) => {
-    const { name, summary, outcome, platform } = (event as CustomEvent<CreateDetail>).detail;
-    repo.capture({ name, summary, outcome, platform }).then(
-      (project) => {
-        screen.create.close();
-        void settle(`“${project.name}” added as an idea.`);
-      },
-      (error: unknown) => screen.create.fail(saveError(error)),
-    );
+  // New project lives in the header; the side panel edits too. Both report here.
+  const stop = onChange((change) => {
+    if (!main.contains(screen.root)) return stop();
+    if (change.origin === 'create') void settle(change.message ?? '', 'create');
+    else if (change.origin !== 'projects') void refresh();
   });
+
+  const nameOf = (id: string): string => find(id)?.project.name ?? 'Project';
 
   screen.edit.addEventListener('fl-project-edit-submit', (event) => {
     const { id, ...input } = (event as CustomEvent<EditDetail>).detail;

@@ -1,6 +1,5 @@
 import type { OverviewModel } from '../../state/overview-model.ts';
 import { el } from '../components/dom.ts';
-import type { ActivityFeed } from '../components/feed.ts';
 import { icon } from '../components/icons.ts';
 import type { StageBars } from '../components/charts.ts';
 import type { ProjectTable } from '../components/table.ts';
@@ -26,12 +25,7 @@ function pageHead(): HTMLElement {
   const head = el('div', 'fl-pagehead');
   const h1 = el('h1', null, 'Overview');
   h1.id = 'page-title';
-  const tools = el('div', 'fl-pagehead__tools');
-  const add = el('a', 'fl-btn fl-btn--primary');
-  add.href = '/inbox';
-  add.append(icon('plus'), document.createTextNode('New project'));
-  tools.append(add);
-  head.append(h1, tools);
+  head.append(h1);
   return head;
 }
 
@@ -54,7 +48,7 @@ export function renderOverviewError(main: HTMLElement, message: string, retry: (
   main.replaceChildren(pageHead(), box);
 }
 
-export function renderOverview(main: HTMLElement, feedHost: HTMLElement, m: OverviewModel): void {
+export function renderOverview(main: HTMLElement, m: OverviewModel): void {
   const dash = el('div', 'fl-dash');
 
   const kpis = el('section', 'fl-panel fl-panel--flush fl-kpis');
@@ -132,12 +126,4 @@ export function renderOverview(main: HTMLElement, feedHost: HTMLElement, m: Over
 
   main.setAttribute('aria-labelledby', 'page-title');
   main.replaceChildren(pageHead(), dash);
-
-  if (m.feed.length) {
-    const feed = create<ActivityFeed>('fl-activity-feed');
-    feed.items = m.feed;
-    feedHost.replaceChildren(feed);
-  } else {
-    feedHost.replaceChildren(el('p', 'fl-muted', 'Activity shows up here as you move projects along.'));
-  }
 }

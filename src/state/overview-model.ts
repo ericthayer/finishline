@@ -56,7 +56,7 @@ export function relativeTime(iso: string, now: Date): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
-function feedItem(payload: ProjectEventPayload, name: string): Omit<FeedItem, 'meta' | 'key'> {
+export function feedItem(payload: ProjectEventPayload, name: string): Omit<FeedItem, 'meta' | 'key'> {
   switch (payload.type) {
     case 'status_changed':
       if (payload.to === 'shipped') return { kind: 'shipped', title: `Shipped ${name}` };

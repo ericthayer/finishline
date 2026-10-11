@@ -4,7 +4,7 @@ import '../../../src/ui/styles/screens.css';
 import '../../../src/ui/components/index.ts';
 import indexHtml from '../../../index.html?raw';
 import { showArchive } from '../../../src/app/archive.ts';
-import { mountShell } from '../../../src/app/shell.ts';
+import { fixtureShell } from './shell.ts';
 import { project } from '../../fixtures.ts';
 import { memoryRepo } from './memory-repo.ts';
 
@@ -25,9 +25,7 @@ const now = (): Date => new Date('2026-10-10T12:00:00Z');
 
 const host = document.getElementById('app');
 if (host) {
-  const shell = mountShell(host, { displayName: 'Eric' }, () => undefined);
-  shell.setRoute({ name: 'archive', params: {} });
-  shell.setAside(false);
+  const shell = fixtureShell(host, 'archive');
   showArchive(shell.main, memoryRepo(seed, params.get('fail')), now);
   document.body.dataset['ready'] = 'true';
 }

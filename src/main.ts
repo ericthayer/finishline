@@ -4,7 +4,7 @@ import './ui/styles/screens.css';
 import './ui/components/index.ts';
 
 import { bindCaptureShortcut, wireCapture } from './app/capture.ts';
-import type { InboxController } from './app/inbox.ts';
+import { announceChange, onChange } from './app/changes.ts';
 import { startRouter, type Route } from './app/router.ts';
 import { mountShell, type Shell } from './app/shell.ts';
 import { createBackend, readConfig, type Backend } from './data/client.ts';
@@ -31,7 +31,6 @@ function start(root: HTMLElement, backend: Backend): void {
   const repo = supabaseProjects(backend);
   let shell: Shell | null = null;
   let current: Route | null = null;
-  let inbox: InboxController | null = null;
   let routerStarted = false;
   let unbindCapture: (() => void) | null = null;
   // Set when the quick-capture dialog saved something; the screen behind it refreshes on close.
@@ -41,14 +40,17 @@ function start(root: HTMLElement, backend: Backend): void {
     current = route;
     if (!shell) return;
     shell.setRoute(route);
-    shell.setAside(route.name === 'overview');
-    inbox = null;
     if (route.name === 'overview') void showOverview(shell);
-    else if (route.name === 'inbox') lazy(route, import('./app/inbox.ts'), (m, s) => (inbox = m.showInbox(s.main, repo)));
+    else if (route.name === 'inbox') lazy(route, import('./app/inbox.ts'), (m, s) => m.showInbox(s.main, repo));
     else if (route.name === 'projects') {
       const q = new URLSearchParams(location.search).get('q') ?? '';
-      lazy(route, import('./app/projects.ts'), (m, s) => m.showProjects(s.main, repo, q));
+      lazy(route, import('./app/projects.ts'), (m, s) => m.showProjects(s.main, repo, q, s.claimSearch));
     } else if (route.name === 'archive') lazy(route, import('./app/archive.ts'), (m, s) => m.showArchive(s.main, repo));
+    else if (route.name === 'activity') {
+      lazy(route, Promise.all([import('./app/activity.ts'), import('./data/activity.ts')]), ([m, d], s) =>
+        m.showActivity(s.main, d.supabaseActivity(backend)),
+      );
+    }
     else if (route.name === 'settings') lazy(route, import('./app/settings.ts'), (m, s) => m.showSettings(s.main, repo));
     else renderPlaceholder(shell.main, route.name);
   };
@@ -73,11 +75,16 @@ function start(root: HTMLElement, backend: Backend): void {
       if (current?.name !== 'overview') return;
       const cap = await repo.loadWipCap().catch(() => DEFAULT_WIP_CAP);
       if (current?.name !== 'overview') return;
-      renderOverview(s.main, s.feed, buildOverview(data, new Date(), cap));
+      renderOverview(s.main, buildOverview(data, new Date(), cap));
     } catch (error) {
       renderOverviewError(s.main, error instanceof Error ? error.message : String(error), () => void showOverview(s));
     }
   };
+
+  // Screens with their own controller refresh themselves; the Overview is re-rendered here.
+  onChange(() => {
+    if (shell && current?.name === 'overview') void showOverview(shell);
+  });
 
   watchSession(backend).subscribe((state) => {
     if (state.kind === 'signed-out') {
@@ -90,16 +97,21 @@ function start(root: HTMLElement, backend: Backend): void {
     if (state.kind !== 'signed-in' || shell) return;
     // Drop the OAuth `?code=` from the address bar once the session exists.
     if (location.search.includes('code=')) history.replaceState(null, '', location.pathname);
-    shell = mountShell(root, state, () => void signOut(backend));
+    shell = mountShell(root, state, {
+      signOut: () => void signOut(backend),
+      createProject: (detail) => repo.capture(detail),
+      onDrawerOpen: (host) => {
+        void import('./app/drawer.ts').then((m) => m.showDrawer(host, repo));
+      },
+    });
     const capture = shell.capture;
     wireCapture(capture.form, repo, () => {
       capturedSinceOpen = true;
     });
     capture.addEventListener('fl-capture-closed', () => {
-      if (!capturedSinceOpen || !shell) return;
+      if (!capturedSinceOpen) return;
       capturedSinceOpen = false;
-      if (current?.name === 'inbox') void inbox?.refresh();
-      else if (current?.name === 'overview') void showOverview(shell);
+      announceChange({ origin: 'capture' });
     });
     unbindCapture = bindCaptureShortcut(capture);
     if (routerStarted && current) show(current);

@@ -3,7 +3,7 @@ import '../../../src/ui/styles/components.css';
 import '../../../src/ui/styles/screens.css';
 import '../../../src/ui/components/index.ts';
 import indexHtml from '../../../index.html?raw';
-import { mountShell } from '../../../src/app/shell.ts';
+import { drawerSource, fixtureShell } from './shell.ts';
 import { buildOverview } from '../../../src/state/overview-model.ts';
 import { renderOverview } from '../../../src/ui/screens/overview.ts';
 import { project } from '../../fixtures.ts';
@@ -38,8 +38,8 @@ const model = buildOverview(
 
 const host = document.getElementById('app');
 if (host) {
-  const shell = mountShell(host, { displayName: 'Eric' }, () => undefined);
-  shell.setRoute({ name: 'overview', params: {} });
-  renderOverview(shell.main, shell.feed, model);
+  const listings = projects.map((p) => ({ project: p, platform: null, repo: null }));
+  const shell = fixtureShell(host, 'overview', { drawer: drawerSource(listings) });
+  renderOverview(shell.main, model);
   document.body.dataset['ready'] = 'true';
 }

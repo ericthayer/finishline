@@ -1,9 +1,7 @@
 import type { ProjectStatus } from '../../domain/types.ts';
 import type { ProjectFilter } from '../../state/projects-model.ts';
 import { el } from '../components/dom.ts';
-import { loadDialog } from '../components/lazy.ts';
 import type { ArchiveDialog } from '../components/archive-dialog.ts';
-import type { CreateProjectDialog } from '../components/create-project-dialog.ts';
 import type { EditProjectDialog } from '../components/edit-project-dialog.ts';
 import { icon } from '../components/icons.ts';
 import type { PauseProjectDialog } from '../components/pause-project-dialog.ts';
@@ -11,8 +9,8 @@ import type { ShipProjectDialog } from '../components/ship-project-dialog.ts';
 import type { ProjectRow, ProjectTable, RowAction } from '../components/table.ts';
 import { STATUS_LABEL } from '../components/status.ts';
 
-// Projects (`/projects`): a search field, status chips and the table. The toolbar is built once,
-// so typing never loses focus; `show` only updates the chips, the count and the results.
+// Projects (`/projects`): status chips and the table; the header search filters by name. The
+// toolbar is built once, so typing never loses focus; `show` only updates chips, count and results.
 
 const ORDER: readonly ProjectStatus[] = ['idea', 'ready', 'active', 'paused', 'shipped', 'archived'];
 
@@ -26,7 +24,6 @@ export interface ProjectsView {
 
 export interface ProjectsHandlers {
   onAction(id: string, action: RowAction): void;
-  onQuery(query: string): void;
   onToggle(status: ProjectStatus): void;
   onReset(): void;
   onRetry(): void;
@@ -35,7 +32,6 @@ export interface ProjectsHandlers {
 export interface ProjectsScreen {
   /** The screen root, so the controller can tell whether it is still on the page. */
   root: HTMLElement;
-  create: CreateProjectDialog;
   edit: EditProjectDialog;
   pause: PauseProjectDialog;
   ship: ShipProjectDialog;
@@ -57,14 +53,7 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   const head = el('div', 'fl-pagehead');
   const h1 = el('h1', null, 'Projects');
   h1.id = 'page-title';
-  const tools = el('div', 'fl-pagehead__tools');
-  const create = document.createElement('fl-create-project-dialog') as CreateProjectDialog;
-  const newButton = el('button', 'fl-btn fl-btn--primary');
-  newButton.type = 'button';
-  newButton.append(icon('plus'), document.createTextNode('New project'));
-  newButton.addEventListener('click', () => void loadDialog('fl-create-project-dialog').then(() => create.open()));
-  tools.append(newButton);
-  head.append(h1, tools);
+  head.append(h1);
 
   const panel = el('section', 'fl-panel fl-panel--flush');
   panel.setAttribute('aria-labelledby', 'h-projects');
@@ -77,21 +66,6 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   bar.append(h2, count);
   const status = el('p', 'fl-projects__status');
   status.setAttribute('aria-live', 'polite');
-
-  const search = el('input');
-  search.type = 'search';
-  search.name = 'q';
-  search.id = 'projects-q';
-  search.autocomplete = 'off';
-  search.placeholder = 'Search by name';
-  const searchLabel = el('label', 'fl-sr', 'Search projects by name');
-  searchLabel.htmlFor = search.id;
-  search.addEventListener('input', () => handlers.onQuery(search.value));
-  const form = el('form', 'fl-projects__search');
-  form.setAttribute('role', 'search');
-  form.setAttribute('aria-label', 'Filter projects');
-  form.addEventListener('submit', (event) => event.preventDefault());
-  form.append(icon('search'), searchLabel, search);
 
   const group = el('div', 'fl-projects__chips');
   group.setAttribute('role', 'group');
@@ -106,7 +80,7 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
     group.append(chip);
   }
   const toolbar = el('div', 'fl-projects__toolbar');
-  toolbar.append(form, group);
+  toolbar.append(group);
 
   const body = el('div', 'fl-projects__body');
   const table = createEl<ProjectTable>('fl-project-table');
@@ -122,14 +96,13 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   const ship = createEl<ShipProjectDialog>('fl-ship-project-dialog');
   const archive = createEl<ArchiveDialog>('fl-archive-dialog');
   main.setAttribute('aria-labelledby', 'page-title');
-  main.replaceChildren(head, panel, create, edit, pause, ship, archive);
+  main.replaceChildren(head, panel, edit, pause, ship, archive);
   document.title = 'Projects · Finishlyne';
 
   const box = (className: string): HTMLElement => el('div', `fl-empty fl-projects__empty ${className}`);
 
   return {
     root: panel,
-    create,
     edit,
     pause,
     ship,
@@ -142,7 +115,6 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
     },
     show(view) {
       for (const [status, chip] of chips) chip.setAttribute('aria-pressed', String(view.filter.statuses.has(status)));
-      if (search.value !== view.filter.query) search.value = view.filter.query;
 
       if (view.total === 0) {
         count.textContent = '';

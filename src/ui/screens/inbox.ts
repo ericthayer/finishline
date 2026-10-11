@@ -67,7 +67,8 @@ export function mountInbox(main: HTMLElement): InboxScreen {
   const archive = create<ArchiveDialog>('fl-archive-dialog');
 
   const dash = el('div', 'fl-dash');
-  dash.append(capturePanel.section, ideas.section);
+  // Ideas first (left), Capture on the right.
+  dash.append(ideas.section, capturePanel.section);
   main.setAttribute('aria-labelledby', 'page-title');
   main.replaceChildren(head, dash, promote, archive);
   document.title = 'Inbox · Finishlyne';

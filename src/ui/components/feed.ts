@@ -10,7 +10,7 @@ export interface FeedItem {
   key?: string;
 }
 
-const KIND: Readonly<Record<FeedKind, { icon: IconName; tone?: 'signal' | 'positive' | 'warning' | 'danger' }>> = {
+export const FEED_KIND: Readonly<Record<FeedKind, { icon: IconName; tone?: 'signal' | 'positive' | 'warning' | 'danger' }>> = {
   checkpoint: { icon: 'bookmark' },
   push: { icon: 'commit' },
   status: { icon: 'arrow', tone: 'signal' },
@@ -32,7 +32,7 @@ export class ActivityFeed extends DataElement<FeedItem> {
   protected render(): void {
     const list = el('ol', 'fl-feed');
     for (const item of this.data) {
-      const kind = KIND[item.kind];
+      const kind = FEED_KIND[item.kind];
       const li = el('li');
       if (kind.tone) li.dataset['tone'] = kind.tone;
       const body = el('div');

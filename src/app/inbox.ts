@@ -6,6 +6,7 @@ import type { TriageDetail } from '../ui/components/inbox-list.ts';
 import type { PromoteDetail } from '../ui/components/promote-dialog.ts';
 import { mountInbox } from '../ui/screens/inbox.ts';
 import { wireCapture } from './capture.ts';
+import { announceChange, onChange } from './changes.ts';
 import { saveError } from './errors.ts';
 
 export interface InboxController {
@@ -36,7 +37,14 @@ export function showInbox(main: HTMLElement, repo: ProjectsRepo, now: () => Date
     }
   };
 
-  wireCapture(screen.capture, repo, () => void refresh());
+  wireCapture(screen.capture, repo, () => {
+    announceChange({ origin: 'inbox' });
+    void refresh();
+  });
+  const stop = onChange((change) => {
+    if (!main.contains(screen.capture)) return stop();
+    if (change.origin !== 'inbox') void refresh();
+  });
 
   let lastIndex = 0;
   screen.root.addEventListener('fl-triage', (event) => {
@@ -51,6 +59,7 @@ export function showInbox(main: HTMLElement, repo: ProjectsRepo, now: () => Date
 
   const settle = async (message: string): Promise<void> => {
     screen.announce(message);
+    announceChange({ origin: 'inbox' });
     await refresh();
     screen.focusAfterMove(lastIndex);
   };
