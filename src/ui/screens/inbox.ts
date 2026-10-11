@@ -2,6 +2,7 @@ import type { InboxModel } from '../../state/inbox-model.ts';
 import type { ArchiveDialog } from '../components/archive-dialog.ts';
 import type { CaptureForm } from '../components/capture-form.ts';
 import { el } from '../components/dom.ts';
+import '../components/inbox-list.ts';
 import type { InboxList } from '../components/inbox-list.ts';
 import type { PromoteDialog } from '../components/promote-dialog.ts';
 
