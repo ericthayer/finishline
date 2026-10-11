@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/ericthayer/finishlyne/compare/v0.2.0...v0.3.0) (2026-10-11)
+
+
+### Features
+
+* pick the review date when pausing a project ([#18](https://github.com/ericthayer/finishlyne/issues/18)) ([40f993d](https://github.com/ericthayer/finishlyne/commit/40f993df04482ae829db179cd063f576dd9faf1f))
+* set the WIP cap in Settings ([#16](https://github.com/ericthayer/finishlyne/issues/16)) ([21dbb2d](https://github.com/ericthayer/finishlyne/commit/21dbb2dff4c78d7ff02ca529242c31af6b152a54))
+
+
+### Performance Improvements
+
+* load Inbox, Projects and Settings as lazy route chunks ([#20](https://github.com/ericthayer/finishlyne/issues/20)) ([ffff9c5](https://github.com/ericthayer/finishlyne/commit/ffff9c537705216ef00cfc4344053f52aace7626))
+
 ## [0.2.0](https://github.com/ericthayer/finishlyne/compare/v0.1.0...v0.2.0) (2026-10-11)
 
 
