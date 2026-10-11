@@ -7,15 +7,23 @@ import type { ProjectListing, ProjectsRepo } from '../../../src/data/projects.ts
 import { mountShell } from '../../../src/app/shell.ts';
 import { showProjects } from '../../../src/app/projects.ts';
 import { project } from '../../fixtures.ts';
-import type { CaptureInput, EditInput } from '../../../src/data/projects.ts';
+import type { CaptureInput, EditInput, MoveInput } from '../../../src/data/projects.ts';
 
 const parsed = new DOMParser().parseFromString(indexHtml, 'text/html');
 for (const tpl of parsed.querySelectorAll('template')) document.body.append(document.importNode(tpl, true));
 
 const params = new URLSearchParams(location.search);
+const withFullLanes = params.has('full')
+  ? [
+      { project: project({ id: 'g', slug: 'alpha', name: 'Alpha', status: 'active', nextAction: 'Ship the parser.' }), platform: null, repo: null },
+      { project: project({ id: 'h', slug: 'beta', name: 'Beta', status: 'active', nextAction: 'Write the docs.' }), platform: null, repo: null },
+    ]
+  : [];
+
 let listings: ProjectListing[] = params.has('empty')
   ? []
   : [
+      ...withFullLanes,
       { project: project({ id: 'a', slug: 'devlog', name: 'DevLog', status: 'active', focusRank: 1, nextAction: 'Fix the timezone bug in the weekly digest.', lastProgressAt: '2026-10-10T08:00:00Z' }), platform: 'claude_code', repo: 'ericthayer/devlog' },
       { project: project({ id: 'b', slug: 'univia', name: 'Univia', status: 'ready', nextAction: 'Write the first migration for courses.' }), platform: null, repo: null },
       { project: project({ id: 'c', slug: 'stacker', name: 'Stacker', status: 'paused', reviewOn: '2026-09-01', nextAction: 'Decide: keep the Bolt prototype or rebuild.' }), platform: 'bolt', repo: null },
@@ -25,7 +33,7 @@ let listings: ProjectListing[] = params.has('empty')
     ];
 
 let n = 0;
-const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update'> = {
+const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive'> = {
   async listProjects() {
     if (params.has('fail')) throw new Error('Network down');
     return listings;
@@ -35,6 +43,27 @@ const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update'> = {
     const p = project({ id: `new-${++n}`, slug: `new-${n}`, name, summary: summary ?? null, outcome: outcome ?? null, status: 'idea' });
     listings = [...listings, { project: p, platform: null, repo: null }];
     return p;
+  },
+  async move(id: string, input: MoveInput) {
+    if (params.has('save-fail')) throw new Error('Network down');
+    listings = listings.map((l) =>
+      l.project.id === id
+        ? {
+            ...l,
+            project: {
+              ...l.project,
+              status: input.to,
+              nextAction: input.to === 'paused' ? input.nextAction : l.project.nextAction,
+            },
+          }
+        : l,
+    );
+  },
+  async archive(id: string, reason: string) {
+    if (params.has('save-fail')) throw new Error('Network down');
+    listings = listings.map((l) =>
+      l.project.id === id ? { ...l, project: { ...l.project, status: 'archived', archivedReason: reason } } : l,
+    );
   },
   async update(id: string, input: EditInput) {
     if (params.has('save-fail')) throw new Error('Network down');

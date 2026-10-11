@@ -155,3 +155,51 @@ test('a failed save in edit keeps the form open with the reason', async ({ page 
   await form.getByRole('button', { name: 'Save changes' }).click();
   await expect(form.getByRole('alert')).toHaveText("That didn't save. Network down");
 });
+
+test('Start moves a ready project to Active', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Start Univia' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“Univia” is Active.');
+  await expect(page.getByRole('row', { name: /Univia/ })).toContainText('Active');
+});
+
+test('a full lane explains itself and changes nothing', async ({ page }) => {
+  await open(page, '?full');
+  await page.getByRole('button', { name: 'Start Univia' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('All 3 lanes are full. Pause, ship or archive an Active project first.');
+  await expect(page.getByRole('row', { name: /Univia/ })).toContainText('Ready');
+});
+
+test('Resume moves a paused project back to Active', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Resume Stacker' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“Stacker” is Active.');
+});
+
+test('Pause asks for a checkpoint, then parks the project', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Pause DevLog' }).click();
+  const form = dialog(page, 'Pause “DevLog”');
+  await expect(form.getByRole('textbox', { name: 'Next action' })).toHaveValue('Fix the timezone bug in the weekly digest.');
+  await axe(page);
+  await form.getByRole('button', { name: 'Pause project' }).click();
+  await expect(form.getByText('Write what happened before pausing.')).toBeVisible();
+  await form.getByRole('textbox', { name: 'What happened' }).fill('Digest sends are fixed. The Monday run is next.');
+  await form.getByRole('button', { name: 'Pause project' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“DevLog” paused.');
+  await expect(page.getByRole('row', { name: /DevLog/ })).toContainText('Paused');
+});
+
+test('Archive from the list asks why, then hides the project', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Archive Univia' }).click();
+  const form = dialog(page, 'Archive “Univia”');
+  await form.getByRole('button', { name: 'Archive', exact: true }).click();
+  await expect(form.getByText('Say why you are archiving it.')).toBeVisible();
+  await form.getByRole('textbox', { name: 'Why archive it?' }).fill('Superseded by DevLog');
+  await form.getByRole('button', { name: 'Archive', exact: true }).click();
+  await expect(form).toBeHidden();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“Univia” archived.');
+  await expect(page.getByRole('row', { name: /Univia/ })).toHaveCount(0);
+});

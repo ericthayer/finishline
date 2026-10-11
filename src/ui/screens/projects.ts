@@ -1,10 +1,12 @@
 import type { ProjectStatus } from '../../domain/types.ts';
 import type { ProjectFilter } from '../../state/projects-model.ts';
 import { el } from '../components/dom.ts';
+import type { ArchiveDialog } from '../components/archive-dialog.ts';
 import type { CreateProjectDialog } from '../components/create-project-dialog.ts';
 import type { EditProjectDialog } from '../components/edit-project-dialog.ts';
 import { icon } from '../components/icons.ts';
-import type { ProjectRow, ProjectTable } from '../components/table.ts';
+import type { PauseProjectDialog } from '../components/pause-project-dialog.ts';
+import type { ProjectRow, ProjectTable, RowAction } from '../components/table.ts';
 import { STATUS_LABEL } from '../components/status.ts';
 
 // Projects (`/projects`): a search field, status chips and the table. The toolbar is built once,
@@ -21,7 +23,7 @@ export interface ProjectsView {
 }
 
 export interface ProjectsHandlers {
-  onEdit(id: string): void;
+  onAction(id: string, action: RowAction): void;
   onQuery(query: string): void;
   onToggle(status: ProjectStatus): void;
   onReset(): void;
@@ -33,6 +35,8 @@ export interface ProjectsScreen {
   root: HTMLElement;
   create: CreateProjectDialog;
   edit: EditProjectDialog;
+  pause: PauseProjectDialog;
+  archive: ArchiveDialog;
   show(view: ProjectsView): void;
   setLoading(): void;
   setError(message: string): void;
@@ -104,15 +108,17 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   const body = el('div', 'fl-projects__body');
   const table = createEl<ProjectTable>('fl-project-table');
   table.setAttribute('caption', 'Projects, sorted by name');
-  panel.addEventListener('fl-project-edit', (event) => {
-    const { id } = (event as CustomEvent<{ id: string }>).detail;
-    handlers.onEdit(id);
+  panel.addEventListener('fl-project-action', (event) => {
+    const { id, action } = (event as CustomEvent<{ id: string; action: RowAction }>).detail;
+    handlers.onAction(id, action);
   });
   panel.append(bar, status, toolbar, body);
 
   const edit = createEl<EditProjectDialog>('fl-edit-project-dialog');
+  const pause = createEl<PauseProjectDialog>('fl-pause-project-dialog');
+  const archive = createEl<ArchiveDialog>('fl-archive-dialog');
   main.setAttribute('aria-labelledby', 'page-title');
-  main.replaceChildren(head, panel, create, edit);
+  main.replaceChildren(head, panel, create, edit, pause, archive);
   document.title = 'Projects · Finishlyne';
 
   const box = (className: string): HTMLElement => el('div', `fl-empty fl-projects__empty ${className}`);
@@ -121,6 +127,8 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
     root: panel,
     create,
     edit,
+    pause,
+    archive,
     announce(message) {
       status.textContent = message;
     },

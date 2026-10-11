@@ -2,9 +2,22 @@ import type { ProjectStatus } from '../../domain/types.ts';
 import { DataElement, define, el, emit } from './dom.ts';
 import { staleBadge, statusPill, type StaleLevel } from './status.ts';
 
+/** What a row can do. Each button fires fl-project-action {id, action}. */
+export type RowAction = 'edit' | 'start' | 'resume' | 'pause' | 'archive';
+
+const ACTION_LABEL: Readonly<Record<RowAction, string>> = {
+  edit: 'Edit',
+  start: 'Start',
+  resume: 'Resume',
+  pause: 'Pause',
+  archive: 'Archive',
+};
+
 export interface ProjectRow {
-  /** Project id. When set, the row shows an Edit button that fires fl-project-edit {id}. */
+  /** Project id. Needed for row actions. */
   id?: string;
+  /** Buttons under the name, in order. Only shown when `id` is set. */
+  actions?: readonly RowAction[];
   name: string;
   key?: string;
   href?: string;
@@ -55,13 +68,17 @@ export class ProjectTable extends DataElement<ProjectRow> {
       const link = el('a', null, r.name);
       link.href = r.href ?? '#';
       name.append(link, el('span', null, r.key ?? ''));
-      if (r.id) {
+      if (r.id && r.actions?.length) {
         const id = r.id;
-        const edit = el('button', 'fl-btn fl-btn--quiet fl-table__edit', 'Edit');
-        edit.type = 'button';
-        edit.setAttribute('aria-label', `Edit ${r.name}`);
-        edit.addEventListener('click', () => emit(this, 'fl-project-edit', { id }));
-        name.append(edit);
+        const group = el('div', 'fl-table__actions');
+        for (const action of r.actions) {
+          const button = el('button', 'fl-btn fl-btn--quiet fl-table__action', ACTION_LABEL[action]);
+          button.type = 'button';
+          button.setAttribute('aria-label', `${ACTION_LABEL[action]} ${r.name}`);
+          button.addEventListener('click', () => emit(this, 'fl-project-action', { id, action }));
+          group.append(button);
+        }
+        name.append(group);
       }
       const nameCell = el('td');
       nameCell.append(name);

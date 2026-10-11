@@ -47,6 +47,11 @@ export interface PromoteInput {
   criteria: readonly string[];
 }
 
+/** A move that the Projects list can make without a form, or with a checkpoint for pause. Gates are re-checked by the database. */
+export type MoveInput =
+  | { to: 'active' }
+  | { to: 'paused'; nextAction: string; checkpointSummary: string };
+
 /** The seam the Inbox and capture talk to. Supabase in the app, in-memory in e2e fixtures. */
 export interface ProjectsRepo {
   listIdeas(): Promise<Idea[]>;
@@ -58,6 +63,8 @@ export interface ProjectsRepo {
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
   archive(id: string, reason: string): Promise<void>;
+  /** Start or Resume, or Pause with a checkpoint. Writes the checkpoint and review date in one call. */
+  move(id: string, input: MoveInput): Promise<void>;
 }
 
 /** Error from a write. `message` is the raw database text; gate codes are parsed by callers. */
@@ -191,6 +198,15 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
 
       const ready = await db.rpc('transition_project', { p_project_id: id, p_to: 'ready' });
       if (ready.error) fail(ready.error);
+    },
+
+    async move(id, input) {
+      const params =
+        input.to === 'active'
+          ? { p_project_id: id, p_to: 'active' }
+          : { p_project_id: id, p_to: 'paused', p_next_action: input.nextAction.trim(), p_checkpoint_summary: input.checkpointSummary.trim() };
+      const { error } = await db.rpc('transition_project', params);
+      if (error) fail(error);
     },
 
     async archive(id, reason) {

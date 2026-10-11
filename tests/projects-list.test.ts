@@ -66,3 +66,15 @@ describe('toProjectRows', () => {
     expect(shipped).not.toHaveProperty('stale');
   });
 });
+
+describe('rowActions', () => {
+  it('offers the one forward move each status allows, and Archive while the project is open', async () => {
+    const { rowActions } = await import('../src/state/projects-model.ts');
+    expect(rowActions('idea')).toEqual(['edit', 'archive']);
+    expect(rowActions('ready')).toEqual(['edit', 'start', 'archive']);
+    expect(rowActions('active')).toEqual(['edit', 'pause', 'archive']);
+    expect(rowActions('paused')).toEqual(['edit', 'resume', 'archive']);
+    expect(rowActions('shipped')).toEqual(['edit']);
+    expect(rowActions('archived')).toEqual(['edit']);
+  });
+});

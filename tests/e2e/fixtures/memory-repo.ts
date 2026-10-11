@@ -1,4 +1,4 @@
-import type { CaptureInput, EditInput, Idea, ProjectsRepo, PromoteInput } from '../../../src/data/projects.ts';
+import type { CaptureInput, EditInput, Idea, MoveInput, ProjectsRepo, PromoteInput } from '../../../src/data/projects.ts';
 import { slugify, uniqueSlug } from '../../../src/domain/slug.ts';
 import type { Project } from '../../../src/domain/types.ts';
 import { project } from '../../fixtures.ts';
@@ -21,6 +21,12 @@ export function memoryRepo(seed: Idea[], fail: string | null): ProjectsRepo {
       const p = project({ id: `new-${n}`, slug, name, summary: summary ?? null, outcome: outcome ?? null, nextAction: null, createdAt: created });
       ideas.push({ project: p, criteria: [] });
       return p;
+    },
+    async move(id: string, input: MoveInput) {
+      const index = ideas.findIndex((i) => i.project.id === id);
+      const current = ideas[index];
+      if (!current) return;
+      ideas[index] = { ...current, project: { ...current.project, status: input.to } };
     },
     async update(id: string, input: EditInput) {
       const index = ideas.findIndex((i) => i.project.id === id);

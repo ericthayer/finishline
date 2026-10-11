@@ -170,3 +170,24 @@ describe('supabaseProjects edits', () => {
     );
   });
 });
+
+describe('supabaseProjects moves', () => {
+  it('starts or resumes through the transition function with nothing else', async () => {
+    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
+    await supabaseProjects(backend).move('p', { to: 'active' });
+    expect(calls).toEqual(['POST /rest/v1/rpc/transition_project {"p_project_id":"p","p_to":"active"}']);
+  });
+
+  it('pauses with the checkpoint and next action, trimmed', async () => {
+    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
+    await supabaseProjects(backend).move('p', { to: 'paused', checkpointSummary: ' Wrote the parser ', nextAction: ' Test the edge cases ' });
+    expect(calls).toEqual([
+      'POST /rest/v1/rpc/transition_project {"p_project_id":"p","p_to":"paused","p_next_action":"Test the edge cases","p_checkpoint_summary":"Wrote the parser"}',
+    ]);
+  });
+
+  it('surfaces the WIP cap the database enforces', async () => {
+    const { backend } = fakeBackend([{ status: 400, body: { code: 'P0001', message: 'GATE:WIP_CAP_REACHED' } }]);
+    await expect(supabaseProjects(backend).move('p', { to: 'active' })).rejects.toThrow('GATE:WIP_CAP_REACHED');
+  });
+});

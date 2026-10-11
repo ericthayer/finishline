@@ -2,7 +2,7 @@ import { PLATFORM_LABELS } from '../domain/brief.ts';
 import { staleness } from '../domain/staleness.ts';
 import { OPEN_STATUSES, type ProjectStatus } from '../domain/types.ts';
 import type { ProjectListing } from '../data/projects.ts';
-import type { ProjectRow } from '../ui/components/table.ts';
+import type { ProjectRow, RowAction } from '../ui/components/table.ts';
 import { relativeTime } from './overview-model.ts';
 
 // Projects list (SPEC §5): search by name, filter by status, shipped and archived hidden by default.
@@ -22,6 +22,13 @@ export function filterProjects(listings: readonly ProjectListing[], filter: Proj
   );
 }
 
+/** Buttons a row offers: Edit always, the one forward move the status allows, and Archive while open. */
+export function rowActions(status: ProjectStatus): RowAction[] {
+  const forward: RowAction[] = status === 'ready' ? ['start'] : status === 'paused' ? ['resume'] : status === 'active' ? ['pause'] : [];
+  const open = (OPEN_STATUSES as readonly ProjectStatus[]).includes(status);
+  return ['edit', ...forward, ...(open ? (['archive'] as const) : [])];
+}
+
 export function toProjectRows(listings: readonly ProjectListing[], now: Date): ProjectRow[] {
   return [...listings]
     .sort((a, b) => a.project.name.localeCompare(b.project.name))
@@ -29,6 +36,7 @@ export function toProjectRows(listings: readonly ProjectListing[], now: Date): P
       const s = staleness(p, now);
       return {
         id: p.id,
+        actions: rowActions(p.status),
         name: p.name,
         key: repo ?? p.slug,
         href: `/p/${p.slug}`,
