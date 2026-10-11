@@ -7,6 +7,7 @@ import {
   toProjectRows,
   type ProjectFilter,
 } from '../state/projects-model.ts';
+import { loadDialog } from '../ui/components/lazy.ts';
 import type { ArchiveDetail } from '../ui/components/archive-dialog.ts';
 import type { CreateDetail } from '../ui/components/create-project-dialog.ts';
 import type { EditDetail } from '../ui/components/edit-project-dialog.ts';
@@ -84,25 +85,29 @@ export function showProjects(
       if (!listing) return;
       const { project } = listing;
       if (action === 'edit') {
-        screen.edit.edit({
-          id,
-          name: project.name,
-          status: project.status,
-          summary: project.summary ?? '',
-          outcome: project.outcome ?? '',
-          nextAction: project.nextAction ?? '',
-        });
+        void loadDialog('fl-edit-project-dialog').then(() =>
+          screen.edit.edit({
+            id,
+            name: project.name,
+            status: project.status,
+            summary: project.summary ?? '',
+            outcome: project.outcome ?? '',
+            nextAction: project.nextAction ?? '',
+          }),
+        );
       } else if (action === 'start' || action === 'resume') {
         start(id, project.name, listing);
       } else if (action === 'pause') {
-        screen.pause.pause({ id, name: project.name, nextAction: project.nextAction ?? '' });
+        void loadDialog('fl-pause-project-dialog').then(() =>
+          screen.pause.pause({ id, name: project.name, nextAction: project.nextAction ?? '' }),
+        );
       } else if (action === 'ship') {
-        repo.listCriteria(id).then(
-          (criteria) => screen.ship.ship({ id, name: project.name, criteria }),
+        Promise.all([repo.listCriteria(id), loadDialog('fl-ship-project-dialog')]).then(
+          ([criteria]) => screen.ship.ship({ id, name: project.name, criteria }),
           (error: unknown) => screen.announce(saveError(error, 'shipped')),
         );
       } else {
-        screen.archive.confirm({ id, name: project.name });
+        void loadDialog('fl-archive-dialog').then(() => screen.archive.confirm({ id, name: project.name }));
       }
     },
     onQuery(query) {

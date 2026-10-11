@@ -1,6 +1,7 @@
 import type { ProjectStatus } from '../../domain/types.ts';
 import type { ProjectFilter } from '../../state/projects-model.ts';
 import { el } from '../components/dom.ts';
+import { loadDialog } from '../components/lazy.ts';
 import type { ArchiveDialog } from '../components/archive-dialog.ts';
 import type { CreateProjectDialog } from '../components/create-project-dialog.ts';
 import type { EditProjectDialog } from '../components/edit-project-dialog.ts';
@@ -61,7 +62,7 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
   const newButton = el('button', 'fl-btn fl-btn--primary');
   newButton.type = 'button';
   newButton.append(icon('plus'), document.createTextNode('New project'));
-  newButton.addEventListener('click', () => create.open());
+  newButton.addEventListener('click', () => void loadDialog('fl-create-project-dialog').then(() => create.open()));
   tools.append(newButton);
   head.append(h1, tools);
 

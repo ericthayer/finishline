@@ -1,5 +1,6 @@
 import type { ProjectsRepo } from '../data/projects.ts';
 import { buildInbox, type InboxItem } from '../state/inbox-model.ts';
+import { loadDialog } from '../ui/components/lazy.ts';
 import type { ArchiveDetail } from '../ui/components/archive-dialog.ts';
 import type { TriageDetail } from '../ui/components/inbox-list.ts';
 import type { PromoteDetail } from '../ui/components/promote-dialog.ts';
@@ -44,8 +45,8 @@ export function showInbox(main: HTMLElement, repo: ProjectsRepo, now: () => Date
     const item = items[index];
     if (!item) return;
     lastIndex = index;
-    if (move === 'promote') screen.promote.edit(item);
-    else screen.archive.confirm(item);
+    if (move === 'promote') void loadDialog('fl-promote-dialog').then(() => screen.promote.edit(item));
+    else void loadDialog('fl-archive-dialog').then(() => screen.archive.confirm(item));
   });
 
   const settle = async (message: string): Promise<void> => {
