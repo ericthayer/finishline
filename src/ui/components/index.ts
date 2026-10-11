@@ -19,3 +19,4 @@ export * from './archive-dialog.ts';
 export * from './create-project-dialog.ts';
 export * from './edit-project-dialog.ts';
 export * from './pause-project-dialog.ts';
+export * from './ship-project-dialog.ts';

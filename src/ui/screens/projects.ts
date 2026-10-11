@@ -6,6 +6,7 @@ import type { CreateProjectDialog } from '../components/create-project-dialog.ts
 import type { EditProjectDialog } from '../components/edit-project-dialog.ts';
 import { icon } from '../components/icons.ts';
 import type { PauseProjectDialog } from '../components/pause-project-dialog.ts';
+import type { ShipProjectDialog } from '../components/ship-project-dialog.ts';
 import type { ProjectRow, ProjectTable, RowAction } from '../components/table.ts';
 import { STATUS_LABEL } from '../components/status.ts';
 
@@ -36,6 +37,7 @@ export interface ProjectsScreen {
   create: CreateProjectDialog;
   edit: EditProjectDialog;
   pause: PauseProjectDialog;
+  ship: ShipProjectDialog;
   archive: ArchiveDialog;
   show(view: ProjectsView): void;
   setLoading(): void;
@@ -116,9 +118,10 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
 
   const edit = createEl<EditProjectDialog>('fl-edit-project-dialog');
   const pause = createEl<PauseProjectDialog>('fl-pause-project-dialog');
+  const ship = createEl<ShipProjectDialog>('fl-ship-project-dialog');
   const archive = createEl<ArchiveDialog>('fl-archive-dialog');
   main.setAttribute('aria-labelledby', 'page-title');
-  main.replaceChildren(head, panel, create, edit, pause, archive);
+  main.replaceChildren(head, panel, create, edit, pause, ship, archive);
   document.title = 'Projects · Finishlyne';
 
   const box = (className: string): HTMLElement => el('div', `fl-empty fl-projects__empty ${className}`);
@@ -128,6 +131,7 @@ export function mountProjects(main: HTMLElement, handlers: ProjectsHandlers): Pr
     create,
     edit,
     pause,
+    ship,
     archive,
     announce(message) {
       status.textContent = message;

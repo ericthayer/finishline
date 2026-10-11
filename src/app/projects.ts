@@ -11,6 +11,7 @@ import type { ArchiveDetail } from '../ui/components/archive-dialog.ts';
 import type { CreateDetail } from '../ui/components/create-project-dialog.ts';
 import type { EditDetail } from '../ui/components/edit-project-dialog.ts';
 import type { PauseDetail } from '../ui/components/pause-project-dialog.ts';
+import type { ShipDetail } from '../ui/components/ship-project-dialog.ts';
 import type { RowAction } from '../ui/components/table.ts';
 import { mountProjects } from '../ui/screens/projects.ts';
 import type { ProjectStatus } from '../domain/types.ts';
@@ -20,7 +21,7 @@ export interface ProjectsController {
   refresh(): Promise<void>;
 }
 
-export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive'>;
+export type ProjectsSource = Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship'>;
 
 /** Mounts the Projects list into `main`. `initialQuery` comes from the top-bar search (`?q=`). */
 export function showProjects(
@@ -95,6 +96,11 @@ export function showProjects(
         start(id, project.name, listing);
       } else if (action === 'pause') {
         screen.pause.pause({ id, name: project.name, nextAction: project.nextAction ?? '' });
+      } else if (action === 'ship') {
+        repo.listCriteria(id).then(
+          (criteria) => screen.ship.ship({ id, name: project.name, criteria }),
+          (error: unknown) => screen.announce(saveError(error, 'shipped')),
+        );
       } else {
         screen.archive.confirm({ id, name: project.name });
       }
@@ -159,6 +165,18 @@ export function showProjects(
         void settle(`“${name}” paused.`);
       },
       (error: unknown) => screen.pause.fail(saveError(error, 'paused')),
+    );
+  });
+
+  screen.ship.addEventListener('fl-project-ship-submit', (event) => {
+    const { id, ...input } = (event as CustomEvent<ShipDetail>).detail;
+    const name = nameOf(id);
+    repo.ship(id, input).then(
+      () => {
+        screen.ship.close();
+        void settle(`“${name}” shipped.`);
+      },
+      (error: unknown) => screen.ship.fail(saveError(error, 'shipped')),
     );
   });
 

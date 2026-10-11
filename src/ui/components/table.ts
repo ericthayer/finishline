@@ -3,13 +3,14 @@ import { DataElement, define, el, emit } from './dom.ts';
 import { staleBadge, statusPill, type StaleLevel } from './status.ts';
 
 /** What a row can do. Each button fires fl-project-action {id, action}. */
-export type RowAction = 'edit' | 'start' | 'resume' | 'pause' | 'archive';
+export type RowAction = 'edit' | 'start' | 'resume' | 'pause' | 'ship' | 'archive';
 
 const ACTION_LABEL: Readonly<Record<RowAction, string>> = {
   edit: 'Edit',
   start: 'Start',
   resume: 'Resume',
   pause: 'Pause',
+  ship: 'Ship',
   archive: 'Archive',
 };
 
