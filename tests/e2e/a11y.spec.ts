@@ -45,3 +45,16 @@ test('explains missing configuration instead of failing silently', async ({ page
   await page.getByRole('button', { name: 'Continue with GitHub' }).click();
   await expect(page.getByRole('alert')).toContainText('Supabase is not configured');
 });
+
+test('the shell has no top bar: search sits in the page head, the avatar at the foot of the rail', async ({ page }) => {
+  await page.goto('/tests/e2e/fixtures/overview.html');
+  await expect(page.locator('body[data-ready]')).toBeAttached();
+  await expect(page.locator('.fl-topbar')).toHaveCount(0);
+  await expect(page.locator('.fl-pagehead > h1 + .fl-search')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'New project' })).toBeVisible();
+  await expect(page.locator('.fl-rail__foot').getByRole('img', { name: 'Signed in as Eric' })).toBeVisible();
+
+  await page.goto('/tests/e2e/fixtures/projects.html');
+  await expect(page.locator('body[data-ready]')).toBeAttached();
+  await expect(page.getByRole('searchbox', { name: 'Search projects', exact: true })).toHaveCount(0);
+});

@@ -27,9 +27,11 @@ function pageHead(): HTMLElement {
   const h1 = el('h1', null, 'Overview');
   h1.id = 'page-title';
   const tools = el('div', 'fl-pagehead__tools');
-  const add = el('a', 'fl-btn fl-btn--primary');
+  const add = el('a', 'fl-btn fl-btn--primary fl-btn--icon');
   add.href = '/inbox';
-  add.append(icon('plus'), document.createTextNode('New project'));
+  add.setAttribute('aria-label', 'New project');
+  add.title = 'New project';
+  add.append(icon('plus'));
   tools.append(add);
   head.append(h1, tools);
   return head;

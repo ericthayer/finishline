@@ -12,7 +12,7 @@ export interface Shell {
   setAside(visible: boolean): void;
 }
 
-/** Mounts the app shell (rail, top bar, main, activity rail) into `host`. */
+/** Mounts the app shell (rail, main, activity rail) into `host`. */
 export function mountShell(host: HTMLElement, user: { displayName: string }, onSignOut: () => void): Shell {
   const fragment = cloneTemplate('tpl-shell');
   const body = slot(fragment, 'body');
@@ -26,6 +26,7 @@ export function mountShell(host: HTMLElement, user: { displayName: string }, onS
   fragment.querySelector('[data-action="sign-out"]')?.addEventListener('click', onSignOut);
   const links = [...fragment.querySelectorAll<HTMLAnchorElement>('a[data-route]')];
   host.replaceChildren(fragment);
+  placeSearch(main);
 
   return {
     main,
@@ -43,4 +44,22 @@ export function mountShell(host: HTMLElement, user: { displayName: string }, onS
       body.classList.toggle('fl-app__body--full', !visible);
     },
   };
+}
+
+/**
+ * Keeps the global search in the current screen's page head, right after its title. Screens
+ * replace `main` wholesale, so this re-places the same form (and what was typed) after each render.
+ * Skipped on screens that bring their own search field, like Projects.
+ */
+function placeSearch(main: HTMLElement): void {
+  const search = cloneTemplate('tpl-search').firstElementChild;
+  if (!(search instanceof HTMLFormElement)) return;
+  const place = (): void => {
+    if (main.contains(search)) return;
+    const title = main.querySelector(':scope > .fl-pagehead > h1');
+    if (!title || main.querySelector('input[type="search"]')) return;
+    title.after(search);
+  };
+  new MutationObserver(place).observe(main, { childList: true });
+  place();
 }

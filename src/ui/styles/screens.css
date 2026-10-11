@@ -101,6 +101,13 @@ fl-inbox-list { display: block; }
 .fl-root { display: flex; flex-direction: column; overflow: hidden; }
 .fl-main { overflow: auto; }
 
+/* Shell without a top bar (Eric, 2026-10-11): rail | body. Search lives in each page head,
+   the avatar at the foot of the rail. Overrides the two-row grid in components.css. */
+.fl-app { grid-template-rows: minmax(0, 1fr); grid-template-areas: "rail body"; }
+.fl-rail__foot .fl-avatar { margin-top: var(--space-2); }
+.fl-pagehead > .fl-search { margin-inline-start: auto; width: clamp(240px, 18vw, 480px); }
+.fl-btn--icon { padding-inline: 0; width: var(--control-height); }
+
 /* Ship dialog: reuses the .fl-check list; these only reset the fieldset and style the note. */
 .fl-ship__group { border: 0; margin: 0; padding: 0; min-width: 0; }
 .fl-ship__note { margin: 0; color: var(--ink-muted); font: 400 var(--text-small-size)/var(--text-small-leading) var(--font-sans); }
