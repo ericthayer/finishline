@@ -219,6 +219,18 @@ describe('lifecycle gates', () => {
     expect(reopened.archived_reason).toBeNull();
   });
 
+  it("lets the Inbox's promote writes through, in order, as the owner", async () => {
+    // Mirrors supabaseProjects().promote: save gate fields, sync the checklist, transition.
+    const id = await createProject(ALICE, 'promote-me');
+    await as(ALICE, async () => {
+      await db.query(`insert into public.ship_criteria (project_id, text) values ($1, 'Old item')`, [id]);
+      await db.query(`update public.projects set outcome = 'Ship it', next_action = 'Start' where id = $1`, [id]);
+      await db.query(`delete from public.ship_criteria where project_id = $1`, [id]);
+      await db.query(`insert into public.ship_criteria (project_id, text, position) values ($1, 'Deployed', 0)`, [id]);
+    });
+    expect((await transition(ALICE, id, 'ready')).status).toBe('ready');
+  });
+
   it('only ships with every criterion done, unless shipping anyway', async () => {
     const id = await readyProject(ALICE, 'ship-me');
     await transition(ALICE, id, 'active');
