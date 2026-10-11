@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkProjectFields, NAME_EMPTY_COPY, WIP_CAP_COPY, wipCapError } from '../src/domain/project-fields.ts';
+import { checkProjectFields, NAME_EMPTY_COPY, WIP_CAP_COPY, wipCapError, reviewDateError, REVIEW_DATE_COPY, REVIEW_DATE_PAST_COPY } from '../src/domain/project-fields.ts';
 import { requiresNextAction } from '../src/domain/lifecycle.ts';
 
 describe('requiresNextAction', () => {
@@ -41,5 +41,20 @@ describe('wipCapError', () => {
 
   it('refuses everything else with the same copy', () => {
     for (const bad of ['', '0', '11', '2.5', '-1', 'three', '1e1']) expect(wipCapError(bad)).toBe(WIP_CAP_COPY);
+  });
+});
+
+describe('reviewDateError', () => {
+  it('accepts today and later days', () => {
+    expect(reviewDateError('2026-10-10', '2026-10-10')).toBeNull();
+    expect(reviewDateError(' 2027-01-05 ', '2026-10-10')).toBeNull();
+  });
+
+  it('refuses earlier days', () => {
+    expect(reviewDateError('2026-10-09', '2026-10-10')).toBe(REVIEW_DATE_PAST_COPY);
+  });
+
+  it('refuses text that is not a real day', () => {
+    for (const bad of ['', 'soon', '2026-13-01', '2026-02-30', '10/24/2026']) expect(reviewDateError(bad, '2026-10-10')).toBe(REVIEW_DATE_COPY);
   });
 });

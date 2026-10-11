@@ -73,6 +73,7 @@ const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 
               ...l.project,
               status: input.to,
               nextAction: input.to === 'paused' ? input.nextAction : l.project.nextAction,
+              reviewOn: input.to === 'paused' ? input.reviewOn : l.project.reviewOn,
             },
           }
         : l,

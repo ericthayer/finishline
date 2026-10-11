@@ -180,9 +180,9 @@ describe('supabaseProjects moves', () => {
 
   it('pauses with the checkpoint and next action, trimmed', async () => {
     const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
-    await supabaseProjects(backend).move('p', { to: 'paused', checkpointSummary: ' Wrote the parser ', nextAction: ' Test the edge cases ' });
+    await supabaseProjects(backend).move('p', { to: 'paused', checkpointSummary: ' Wrote the parser ', nextAction: ' Test the edge cases ', reviewOn: '2026-10-24' });
     expect(calls).toEqual([
-      'POST /rest/v1/rpc/transition_project {"p_project_id":"p","p_to":"paused","p_next_action":"Test the edge cases","p_checkpoint_summary":"Wrote the parser"}',
+      'POST /rest/v1/rpc/transition_project {"p_project_id":"p","p_to":"paused","p_next_action":"Test the edge cases","p_checkpoint_summary":"Wrote the parser","p_review_on":"2026-10-24"}',
     ]);
   });
 

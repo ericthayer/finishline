@@ -46,3 +46,17 @@ export function wipCapError(raw: string): string | null {
   const n = Number(value);
   return n < WIP_CAP_MIN || n > WIP_CAP_MAX ? WIP_CAP_COPY : null;
 }
+
+export const REVIEW_DATE_COPY = 'Pick the day it comes back for review.';
+export const REVIEW_DATE_PAST_COPY = 'Pick today or a later day.';
+
+/** A pause review date is a real calendar day (YYYY-MM-DD) that is not before `today`. Null when fine. */
+export function reviewDateError(raw: string, today: string): string | null {
+  const value = raw.trim();
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return REVIEW_DATE_COPY;
+  const [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
+  const real = new Date(Date.UTC(y, m - 1, d));
+  if (real.getUTCFullYear() !== y || real.getUTCMonth() !== m - 1 || real.getUTCDate() !== d) return REVIEW_DATE_COPY;
+  return value < today ? REVIEW_DATE_PAST_COPY : null;
+}
