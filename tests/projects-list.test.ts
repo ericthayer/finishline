@@ -72,7 +72,7 @@ describe('rowActions', () => {
     const { rowActions } = await import('../src/state/projects-model.ts');
     expect(rowActions('idea')).toEqual(['edit', 'archive']);
     expect(rowActions('ready')).toEqual(['edit', 'start', 'archive']);
-    expect(rowActions('active')).toEqual(['edit', 'pause', 'archive']);
+    expect(rowActions('active')).toEqual(['edit', 'pause', 'ship', 'archive']);
     expect(rowActions('paused')).toEqual(['edit', 'resume', 'archive']);
     expect(rowActions('shipped')).toEqual(['edit']);
     expect(rowActions('archived')).toEqual(['edit']);

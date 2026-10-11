@@ -24,7 +24,7 @@ export function filterProjects(listings: readonly ProjectListing[], filter: Proj
 
 /** Buttons a row offers: Edit always, the one forward move the status allows, and Archive while open. */
 export function rowActions(status: ProjectStatus): RowAction[] {
-  const forward: RowAction[] = status === 'ready' ? ['start'] : status === 'paused' ? ['resume'] : status === 'active' ? ['pause'] : [];
+  const forward: RowAction[] = status === 'ready' ? ['start'] : status === 'paused' ? ['resume'] : status === 'active' ? ['pause', 'ship'] : [];
   const open = (OPEN_STATUSES as readonly ProjectStatus[]).includes(status);
   return ['edit', ...forward, ...(open ? (['archive'] as const) : [])];
 }

@@ -52,6 +52,17 @@ export type MoveInput =
   | { to: 'active' }
   | { to: 'paused'; nextAction: string; checkpointSummary: string };
 
+/** Closing out a project: which criteria changed, and whether to ship with some still open. */
+export interface ShipInput {
+  /** Criterion ids to mark done. */
+  check: readonly string[];
+  /** Criterion ids to mark not done. */
+  uncheck: readonly string[];
+  shipAnyway: boolean;
+  /** Optional https:// link to the shipped thing. */
+  shippedUrl: string;
+}
+
 /** The seam the Inbox and capture talk to. Supabase in the app, in-memory in e2e fixtures. */
 export interface ProjectsRepo {
   listIdeas(): Promise<Idea[]>;
@@ -63,6 +74,10 @@ export interface ProjectsRepo {
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
   archive(id: string, reason: string): Promise<void>;
+  /** The ship checklist for one project, in order. */
+  listCriteria(id: string): Promise<CriterionRecord[]>;
+  /** Saves the checklist changes, then moves the project to Shipped. The database re-checks open criteria. */
+  ship(id: string, input: ShipInput): Promise<void>;
   /** Start or Resume, or Pause with a checkpoint. Writes the checkpoint and review date in one call. */
   move(id: string, input: MoveInput): Promise<void>;
 }
@@ -198,6 +213,30 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
 
       const ready = await db.rpc('transition_project', { p_project_id: id, p_to: 'ready' });
       if (ready.error) fail(ready.error);
+    },
+
+    async listCriteria(id) {
+      const { data, error } = await db.from('ship_criteria').select('id, project_id, text, position, done_at').eq('project_id', id).order('position');
+      if (error) fail(error);
+      return ((data ?? []) as CriterionRow[]).map((c) => ({ id: c.id, text: c.text, position: c.position, doneAt: c.done_at }));
+    },
+
+    async ship(id, { check, uncheck, shipAnyway, shippedUrl }) {
+      if (check.length) {
+        const done = await db.from('ship_criteria').update({ done_at: new Date().toISOString() }).in('id', [...check]);
+        if (done.error) fail(done.error);
+      }
+      if (uncheck.length) {
+        const undone = await db.from('ship_criteria').update({ done_at: null }).in('id', [...uncheck]);
+        if (undone.error) fail(undone.error);
+      }
+      const { error } = await db.rpc('transition_project', {
+        p_project_id: id,
+        p_to: 'shipped',
+        p_ship_anyway: shipAnyway,
+        p_shipped_url: orNull(shippedUrl),
+      });
+      if (error) fail(error);
     },
 
     async move(id, input) {

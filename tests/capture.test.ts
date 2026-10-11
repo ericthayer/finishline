@@ -191,3 +191,33 @@ describe('supabaseProjects moves', () => {
     await expect(supabaseProjects(backend).move('p', { to: 'active' })).rejects.toThrow('GATE:WIP_CAP_REACHED');
   });
 });
+
+describe('supabaseProjects ship', () => {
+  it('saves the checklist changes, then ships through the transition function', async () => {
+    const { backend, calls } = fakeBackend([
+      { status: 204, body: null },
+      { status: 204, body: null },
+      { status: 204, body: null },
+    ]);
+    await supabaseProjects(backend).ship('p', { check: ['a'], uncheck: ['b'], shipAnyway: false, shippedUrl: ' https://x.dev ' });
+    expect(calls.map((c) => c.split(' ').slice(0, 2).join(' '))).toEqual([
+      'PATCH /rest/v1/ship_criteria?id=in.(a)',
+      'PATCH /rest/v1/ship_criteria?id=in.(b)',
+      'POST /rest/v1/rpc/transition_project',
+    ]);
+    expect(calls[1]).toContain('{"done_at":null}');
+    expect(calls[2]).toContain('"p_to":"shipped","p_ship_anyway":false,"p_shipped_url":"https://x.dev"');
+  });
+
+  it('skips the checklist writes when nothing changed and sends no link as null', async () => {
+    const { backend, calls } = fakeBackend([{ status: 204, body: null }]);
+    await supabaseProjects(backend).ship('p', { check: [], uncheck: [], shipAnyway: true, shippedUrl: '' });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toContain('"p_ship_anyway":true,"p_shipped_url":null');
+  });
+
+  it('lists the checklist in order', async () => {
+    const { backend } = fakeBackend([{ status: 200, body: [{ id: 'a', project_id: 'p', text: 'Docs', position: 0, done_at: null }] }]);
+    expect(await supabaseProjects(backend).listCriteria('p')).toEqual([{ id: 'a', text: 'Docs', position: 0, doneAt: null }]);
+  });
+});

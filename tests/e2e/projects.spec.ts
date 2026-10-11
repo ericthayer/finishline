@@ -203,3 +203,47 @@ test('Archive from the list asks why, then hides the project', async ({ page }) 
   await expect(page.locator('.fl-projects__status')).toHaveText('“Univia” archived.');
   await expect(page.getByRole('row', { name: /Univia/ })).toHaveCount(0);
 });
+
+test('Ship shows the checklist and asks to ship anyway when items are open', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Ship DevLog' }).click();
+  const form = dialog(page, 'Ship “DevLog”');
+  await expect(form.getByRole('checkbox', { name: 'Digest sends on time' })).toBeChecked();
+  await expect(form.getByRole('checkbox', { name: 'Docs written' })).not.toBeChecked();
+  await axe(page);
+  await form.getByRole('button', { name: 'Ship project' }).click();
+  await expect(form.getByText('1 ship criterion is still open. Check them off or ship anyway.')).toBeVisible();
+  await expect(form).toBeVisible();
+});
+
+test('checking the last item ships the project', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Ship DevLog' }).click();
+  const form = dialog(page, 'Ship “DevLog”');
+  await form.getByRole('checkbox', { name: 'Docs written' }).check();
+  await form.getByRole('textbox', { name: 'Link to what you shipped (optional)' }).fill('https://devlog.example.com');
+  await form.getByRole('button', { name: 'Ship project' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“DevLog” shipped.');
+  await expect(page.getByRole('row', { name: /DevLog/ })).toHaveCount(0);
+});
+
+test('ship anyway ships with items still open', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Ship DevLog' }).click();
+  const form = dialog(page, 'Ship “DevLog”');
+  await form.getByRole('checkbox', { name: /Ship anyway/ }).check();
+  await form.getByRole('button', { name: 'Ship project' }).click();
+  await expect(page.locator('.fl-projects__status')).toHaveText('“DevLog” shipped.');
+});
+
+test('a link that is not https is refused', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Ship DevLog' }).click();
+  const form = dialog(page, 'Ship “DevLog”');
+  await form.getByRole('checkbox', { name: /Ship anyway/ }).check();
+  await form.getByRole('textbox', { name: 'Link to what you shipped (optional)' }).fill('http://devlog.example.com');
+  await form.getByRole('button', { name: 'Ship project' }).click();
+  await expect(form.getByText('Use a link that starts with https://.')).toBeVisible();
+  await expect(form).toBeVisible();
+});

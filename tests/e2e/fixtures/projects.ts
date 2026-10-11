@@ -7,7 +7,7 @@ import type { ProjectListing, ProjectsRepo } from '../../../src/data/projects.ts
 import { mountShell } from '../../../src/app/shell.ts';
 import { showProjects } from '../../../src/app/projects.ts';
 import { project } from '../../fixtures.ts';
-import type { CaptureInput, EditInput, MoveInput } from '../../../src/data/projects.ts';
+import type { CaptureInput, CriterionRecord, EditInput, MoveInput, ShipInput } from '../../../src/data/projects.ts';
 
 const parsed = new DOMParser().parseFromString(indexHtml, 'text/html');
 for (const tpl of parsed.querySelectorAll('template')) document.body.append(document.importNode(tpl, true));
@@ -33,7 +33,23 @@ let listings: ProjectListing[] = params.has('empty')
     ];
 
 let n = 0;
-const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive'> = {
+// DevLog has two criteria, one done. Everything else has none.
+const criteria: Record<string, CriterionRecord[]> = {
+  a: [
+    { id: 'c1', text: 'Digest sends on time', position: 0, doneAt: '2026-10-09T10:00:00Z' },
+    { id: 'c2', text: 'Docs written', position: 1, doneAt: null },
+  ],
+};
+const repo: Pick<ProjectsRepo, 'listProjects' | 'capture' | 'update' | 'move' | 'archive' | 'listCriteria' | 'ship'> = {
+  async listCriteria(id: string) {
+    return criteria[id] ?? [];
+  },
+  async ship(id: string, input: ShipInput) {
+    if (params.has('save-fail')) throw new Error('Network down');
+    const open = (criteria[id] ?? []).filter((c) => (c.doneAt === null && !input.check.includes(c.id)) || input.uncheck.includes(c.id));
+    if (open.length && !input.shipAnyway) throw new Error('GATE:UNMET_SHIP_CRITERIA');
+    listings = listings.map((l) => (l.project.id === id ? { ...l, project: { ...l.project, status: 'shipped' } } : l));
+  },
   async listProjects() {
     if (params.has('fail')) throw new Error('Network down');
     return listings;

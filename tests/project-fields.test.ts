@@ -23,3 +23,13 @@ describe('checkProjectFields', () => {
     expect(checkProjectFields('paused', { name: 'Dev log', nextAction: 'Decide the stack' }).nextAction).toBeNull();
   });
 });
+
+describe('shipUrlError', () => {
+  it('is optional, and when given must be https', async () => {
+    const { shipUrlError, SHIP_URL_COPY } = await import('../src/domain/project-fields.ts');
+    expect(shipUrlError('  ')).toBeNull();
+    expect(shipUrlError('https://example.com/app')).toBeNull();
+    expect(shipUrlError('http://example.com')).toBe(SHIP_URL_COPY);
+    expect(shipUrlError('not a link')).toBe(SHIP_URL_COPY);
+  });
+});
