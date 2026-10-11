@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/ericthayer/finishlyne/compare/v0.1.0...v0.2.0) (2026-10-11)
+
+
+### Features
+
+* ship projects from the Projects list with the done-when checklist ([#13](https://github.com/ericthayer/finishlyne/issues/13)) ([20debb0](https://github.com/ericthayer/finishlyne/commit/20debb077452701555e79342f5fd8fb490b50436))
+
+
+### Performance Improvements
+
+* load dialogs as lazy chunks ([#15](https://github.com/ericthayer/finishlyne/issues/15)) ([7515205](https://github.com/ericthayer/finishlyne/commit/7515205c7a1d9ab69430a680a28fd771ee6a39db))
+
 ## 0.1.0 (2026-10-11)
 
 
