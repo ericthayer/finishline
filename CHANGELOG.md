@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.0](https://github.com/ericthayer/finishlyne/compare/v0.3.0...v0.4.0) (2026-10-11)
+
+
+### Features
+
+* Archive screen with reopen for shipped and archived projects ([#21](https://github.com/ericthayer/finishlyne/issues/21)) ([d3c8614](https://github.com/ericthayer/finishlyne/commit/d3c861485fedc0ca2188cf36a3a89287abde24b5))
+* set platform and deep link in project create/edit ([#23](https://github.com/ericthayer/finishlyne/issues/23)) ([6b9d20d](https://github.com/ericthayer/finishlyne/commit/6b9d20dbe6090b3bba2cb180837bc38476c8e2ad))
+* **shell:** one page head everywhere, side panel tabs, account menu, activity page ([#24](https://github.com/ericthayer/finishlyne/issues/24)) ([4ebad2e](https://github.com/ericthayer/finishlyne/commit/4ebad2e170516792f084086b692b8002b0ab73a5))
+
 ## [0.3.0](https://github.com/ericthayer/finishlyne/compare/v0.2.0...v0.3.0) (2026-10-11)
 
 
