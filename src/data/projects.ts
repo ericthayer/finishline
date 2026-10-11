@@ -75,6 +75,8 @@ export interface ProjectsRepo {
   /** Saves the Ready gate fields, then moves the idea to Ready. */
   promote(id: string, input: PromoteInput): Promise<void>;
   archive(id: string, reason: string): Promise<void>;
+  /** Moves a shipped or archived project back to Ready with a next action (SPEC §4 reopen). */
+  reopen(id: string, nextAction: string): Promise<void>;
   /** The ship checklist for one project, in order. */
   listCriteria(id: string): Promise<CriterionRecord[]>;
   /** Saves the checklist changes, then moves the project to Shipped. The database re-checks open criteria. */
@@ -265,6 +267,11 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
 
     async archive(id, reason) {
       const { error } = await db.rpc('transition_project', { p_project_id: id, p_to: 'archived', p_archived_reason: reason.trim() });
+      if (error) fail(error);
+    },
+
+    async reopen(id, nextAction) {
+      const { error } = await db.rpc('transition_project', { p_project_id: id, p_to: 'ready', p_next_action: nextAction.trim() });
       if (error) fail(error);
     },
   };

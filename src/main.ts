@@ -48,7 +48,8 @@ function start(root: HTMLElement, backend: Backend): void {
     else if (route.name === 'projects') {
       const q = new URLSearchParams(location.search).get('q') ?? '';
       lazy(route, import('./app/projects.ts'), (m, s) => m.showProjects(s.main, repo, q));
-    } else if (route.name === 'settings') lazy(route, import('./app/settings.ts'), (m, s) => m.showSettings(s.main, repo));
+    } else if (route.name === 'archive') lazy(route, import('./app/archive.ts'), (m, s) => m.showArchive(s.main, repo));
+    else if (route.name === 'settings') lazy(route, import('./app/settings.ts'), (m, s) => m.showSettings(s.main, repo));
     else renderPlaceholder(shell.main, route.name);
   };
 

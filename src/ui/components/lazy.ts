@@ -8,6 +8,7 @@ const LOADERS = {
   'fl-ship-project-dialog': () => import('./ship-project-dialog.ts'),
   'fl-archive-dialog': () => import('./archive-dialog.ts'),
   'fl-promote-dialog': () => import('./promote-dialog.ts'),
+  'fl-reopen-dialog': () => import('./reopen-dialog.ts'),
 } as const;
 
 export type LazyDialogTag = keyof typeof LOADERS;
