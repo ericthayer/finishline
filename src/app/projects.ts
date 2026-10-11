@@ -1,6 +1,6 @@
 import type { ProjectListing, ProjectsRepo } from '../data/projects.ts';
 import { explainGate } from '../domain/gates.ts';
-import { checkTransition, DEFAULT_WIP_CAP } from '../domain/lifecycle.ts';
+import { checkTransition, defaultReviewOn, DEFAULT_WIP_CAP } from '../domain/lifecycle.ts';
 import {
   DEFAULT_STATUSES,
   filterProjects,
@@ -102,7 +102,13 @@ export function showProjects(
         start(id, project.name, listing);
       } else if (action === 'pause') {
         void loadDialog('fl-pause-project-dialog').then(() =>
-          screen.pause.pause({ id, name: project.name, nextAction: project.nextAction ?? '' }),
+          screen.pause.pause({
+            id,
+            name: project.name,
+            nextAction: project.nextAction ?? '',
+            reviewOn: defaultReviewOn(now()),
+            today: defaultReviewOn(now(), 0),
+          }),
         );
       } else if (action === 'ship') {
         Promise.all([repo.listCriteria(id), loadDialog('fl-ship-project-dialog')]).then(
@@ -165,9 +171,9 @@ export function showProjects(
   });
 
   screen.pause.addEventListener('fl-project-pause-submit', (event) => {
-    const { id, checkpointSummary, nextAction } = (event as CustomEvent<PauseDetail>).detail;
+    const { id, checkpointSummary, nextAction, reviewOn } = (event as CustomEvent<PauseDetail>).detail;
     const name = nameOf(id);
-    repo.move(id, { to: 'paused', checkpointSummary, nextAction }).then(
+    repo.move(id, { to: 'paused', checkpointSummary, nextAction, reviewOn }).then(
       () => {
         screen.pause.close();
         void settle(`“${name}” paused.`);

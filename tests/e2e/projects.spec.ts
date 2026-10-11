@@ -203,6 +203,31 @@ test('Pause asks for a checkpoint, then parks the project', async ({ page }) => 
   await expect(page.getByRole('row', { name: /DevLog/ })).toContainText('Paused');
 });
 
+test('Pause suggests a review day two weeks out and keeps the one you pick', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Pause DevLog' }).click();
+  const form = dialog(page, 'Pause “DevLog”');
+  const review = form.getByLabel('Review on');
+  await expect(review).toHaveValue('2026-10-24');
+  await review.fill('2026-10-20');
+  await form.getByRole('textbox', { name: 'What happened' }).fill('Digest sends are fixed.');
+  await form.getByRole('button', { name: 'Pause project' }).click();
+  await expect(form).toBeHidden();
+  await expect(page.getByRole('row', { name: /DevLog/ })).toContainText('in 10d');
+});
+
+test('Pause refuses a review day in the past', async ({ page }) => {
+  await open(page);
+  await page.getByRole('button', { name: 'Pause DevLog' }).click();
+  const form = dialog(page, 'Pause “DevLog”');
+  await form.getByRole('textbox', { name: 'What happened' }).fill('Digest sends are fixed.');
+  await form.getByLabel('Review on').fill('2026-10-01');
+  await form.getByRole('button', { name: 'Pause project' }).click();
+  await expect(form.getByText('Pick today or a later day.')).toBeVisible();
+  await expect(form.getByLabel('Review on')).toHaveAttribute('aria-invalid', 'true');
+  await axe(page);
+});
+
 test('Archive from the list asks why, then hides the project', async ({ page }) => {
   await open(page);
   await page.getByRole('button', { name: 'Archive Univia' }).click();

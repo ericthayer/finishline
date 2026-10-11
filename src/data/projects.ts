@@ -51,7 +51,7 @@ export interface PromoteInput {
 /** A move that the Projects list can make without a form, or with a checkpoint for pause. Gates are re-checked by the database. */
 export type MoveInput =
   | { to: 'active' }
-  | { to: 'paused'; nextAction: string; checkpointSummary: string };
+  | { to: 'paused'; nextAction: string; checkpointSummary: string; reviewOn: string };
 
 /** Closing out a project: which criteria changed, and whether to ship with some still open. */
 export interface ShipInput {
@@ -247,7 +247,7 @@ export function supabaseProjects(backend: Backend): ProjectsRepo {
       const params =
         input.to === 'active'
           ? { p_project_id: id, p_to: 'active' }
-          : { p_project_id: id, p_to: 'paused', p_next_action: input.nextAction.trim(), p_checkpoint_summary: input.checkpointSummary.trim() };
+          : { p_project_id: id, p_to: 'paused', p_next_action: input.nextAction.trim(), p_checkpoint_summary: input.checkpointSummary.trim(), p_review_on: input.reviewOn };
       const { error } = await db.rpc('transition_project', params);
       if (error) fail(error);
     },
