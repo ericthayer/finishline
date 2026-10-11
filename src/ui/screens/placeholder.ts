@@ -3,6 +3,7 @@ import { el } from '../components/dom.ts';
 const COPY: Readonly<Record<string, { title: string; body: string }>> = {
   project: { title: 'Resume', body: 'The project detail and handoff brief. Arrives in Phase 2.' },
   archive: { title: 'Archive', body: 'Shipped and archived projects. Arrives in Phase 1.' },
+  'load-failed': { title: 'Not loaded', body: 'This screen did not load. Check your connection, then reload the page.' },
   'not-found': { title: 'Not found', body: 'Nothing lives at this address.' },
 };
 
