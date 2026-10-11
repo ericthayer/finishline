@@ -12,6 +12,9 @@ export function memoryRepo(seed: Idea[], fail: string | null): ProjectsRepo {
       if (fail === 'list') throw new Error('Network down');
       return ideas.map((i) => ({ project: i.project, criteria: [...i.criteria] }));
     },
+    async listProjects() {
+      return ideas.map((i) => ({ project: i.project, platform: null, repo: null }));
+    },
     async capture({ name, summary }: CaptureInput): Promise<Project> {
       const slug = uniqueSlug(slugify(name), new Set(ideas.map((i) => i.project.slug)));
       const created = new Date(Date.UTC(2026, 9, 10, 11, 30, n++)).toISOString();
